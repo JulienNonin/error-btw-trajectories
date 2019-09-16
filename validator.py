@@ -54,7 +54,8 @@ def test(estimator, epsilon = .00001, samples_range = slice(0, None), display = 
                 print(f"ok \t The expected value is indeed {res}")
             else :
                 print(f"NOT ok \t The expected value is {res_true}, but the output value is {res}.")
-                validated = False
+                validated = False  
+        print()
     return validated
 
 if __name__ == "__main__":
