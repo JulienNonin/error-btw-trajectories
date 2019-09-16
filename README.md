@@ -8,11 +8,11 @@ We are interested in **computing metrics that characterise the accuracy of an in
 ### Test samples
 A battery of tests is located in the folder `test`. Each file  `[test<i>]<description>.txt` represents a test sample, with has the format shown in the following example:
 ```python
-0	1	2	3	4		# abscissa of the points of the real trajectory
-0	0	1	1	0		# ordinate of the points of the real trajectory
-0	1	2	3	4		# abscissa of the points reported by the location system
-3	3	2	2	5		# ordinate of the points reported by the location system
-9							# expected result
+0	1	2	3	4	# abscissa of the points of the real trajectory
+0	0	1	1	0	# ordinate of the points of the real trajectory
+0	1	2	3	4	# abscissa of the points reported by the location system
+3	3	2	2	5	# ordinate of the points reported by the location system
+9					# expected result
 ```
 
 Here is an example of code that allows you to retrieve the data from such a test file:
