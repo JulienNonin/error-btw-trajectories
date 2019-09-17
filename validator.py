@@ -32,8 +32,8 @@ def test(estimator, epsilon = .00001, samples_range = slice(0, None), display = 
             
             # Fetching data
             path = dirname + filename
-            X = np.loadtxt(path, skiprows=0, max_rows=2, unpack=True)
-            Y = np.loadtxt(path, skiprows=2, max_rows=2, unpack=True)
+            X = np.loadtxt(path, skiprows=0, max_rows=2, unpack=True, delimiter=',')
+            Y = np.loadtxt(path, skiprows=2, max_rows=2, unpack=True, delimiter=',')
             res_true = np.loadtxt(path, skiprows=4)
             
             # Compute the error estimate algorithm
