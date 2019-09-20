@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from os import listdir
 
-def test(estimator, samples_range = slice(0, None), display = False, dirname = "test/"):
+def test(estimator, samples_range = slice(0, None), display = False, dirname = "indoor-location-oracles/Oracles/"):
     """Tests whether the function 'estimator' correctly estimates the
     difference between two trajectories. A battery of tests contained
     in the test folder is used for this purpose. It raises an `Assertion-
@@ -24,8 +24,8 @@ def test(estimator, samples_range = slice(0, None), display = False, dirname = "
     Returns : True if all tests have been validated, False if any has failed
     """
     validated = True # boolean returned by the function
-    testfiles = sorted([filename for filename in listdir(dirname) if "test" in filename])
-    for filename in testfiles[samples_range]:
+#     testfiles = sorted([filename for filename in listdir(dirname) if "test" in filename])
+    for filename in sorted(listdir(dirname))[samples_range]:
         print(filename, end="\t")
 
         # Fetching data
@@ -35,8 +35,6 @@ def test(estimator, samples_range = slice(0, None), display = False, dirname = "
         if np.shape(X) == (2,): X = np.array([X])
         if np.shape(Y) == (2,): Y = np.array([Y])
         res_true, epsilon = np.loadtxt(path, skiprows=4)
-        print(res_true, epsilon)
-        print("Hello")
             
         # Compute the error estimate algorithm
         res = estimator(X, Y)
