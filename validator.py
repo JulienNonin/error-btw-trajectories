@@ -24,8 +24,8 @@ def test(estimator, samples_range = slice(0, None), display = False, dirname = "
     Returns : True if all tests have been validated, False if any has failed
     """
     validated = True # boolean returned by the function
-#     testfiles = sorted([filename for filename in listdir(dirname) if "test" in filename])
-    for filename in sorted(listdir(dirname))[samples_range]:
+    testfiles = sorted([filename for filename in listdir(dirname) if ".txt" in filename])
+    for filename in testfiles[samples_range]:
         print(filename, end="\t")
 
         # Fetching data
