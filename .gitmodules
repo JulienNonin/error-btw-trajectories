@@ -1,0 +1,3 @@
+[submodule "indoor-location-oracles"]
+	path = indoor-location-oracles
+	url = https://github.com/rouvoy/indoor-location-oracles.git
