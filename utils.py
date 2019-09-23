@@ -13,26 +13,33 @@ from matplotlib.patches import Polygon
 
 # ## Distance
 
-# In[23]:
+# In[117]:
 
 
 def distance(P, Q):
-    """
-    >>> distance(*np.array([[-8, 9],[0, 0]]))
-    12.041594578792296
-    >>> distance(np.array([10, 20]), np.array([-4, 5]))
-    20.518284528683193
-    >>> distance(np.array([-3, 5]), np.array([-3, 5]))
+    """ Computes the distance between two points P and Q
+    
+    >>> np.round(distance(*np.array([[-8, 9],[0, 0]])), 2)
+    12.04
+    >>> np.round(distance(np.array([10, 20]), np.array([-4, 5])), 2)
+    20.52
+    >>> np.round(distance(np.array([-3, 5]), np.array([-3, 5])), 2)
     0.0
     """
     return np.sqrt(np.sum((P-Q)**2 ))
 
 def distance_to_line(A1, A2, B):
-    """ distance from B to line (A1A2)"""
+    """ Distance from B to line (A1A2)
+    
+    >>> np.round(distance_to_line(*np.array([[-1, 2], [2, 3], [1, 1]])), 2)
+    1.58
+    >>> np.round(distance_to_line(*np.array([[0, 1], [0, 3], [-1, 0]])), 2) # (A1A2) vertical
+    1.0
+    """
     # equation of the line (A1A2) is defined as by = ax + c
     b, a = A2 - A1
     c = b*A1[1] - a*A1[0]
-    return abs(b*B[1] - a*B[0] - c)/np.hypot(a, b)
+    return abs(b*B[1] - a*B[0] - c) / np.hypot(a, b)
 
 if __name__ == "__main__":
     doctest.testmod()
@@ -40,17 +47,32 @@ if __name__ == "__main__":
 
 # ## Vectors
 
-# In[26]:
+# In[96]:
 
 
 def norm(X):
+    """
+    >>> np.round(norm(np.array([2, 2])), 2)
+    2.83
+    >>> np.round(norm(np.array([1, -1.5])), 2)
+    1.8
+    """
     return distance(X, 0)
 
 def orientation(A, B, C):
     """ Returns:
-        *  1 if A-B-C are counterclockwise ordered
+        *  1 if A-B-C are clockwise ordered
         *  0              colinear
-        * -1             clockwise ordered
+        * -1              counterclockwise ordered
+        
+    >>> orientation(*np.array([[-1, 1], [-1, 3], [1, 2]]))
+    1
+    >>> orientation(*np.array([[-1, 3], [-1, 1], [1, 2]]))
+    -1
+    >>> orientation(*np.array([[-1, 1], [-1, 3], [-1, 2]]))
+    0
+    >>> orientation(*np.array([[-1, 1], [-1, 3], [-1, 3]])) # B = C
+    0
     """
     r = (B[1] - A[1]) * (C[0] - B[0]) - (C[1] - B[1]) * (B[0] - A[0])
     if np.abs(r) < 1e-5 : # r == 0
@@ -63,32 +85,66 @@ def orientation(A, B, C):
 def is_colinear(v1, v2):
     return abs(np.dot(v1, v2)) == norm(v1) * norm(v2)
 
+if __name__=="__main__":
+    doctest.testmod()
+
 
 # ## Intersections
 
-# In[28]:
+# In[73]:
 
 
 def find_eq_line(A, B):
-    """ax + by = c"""
+    """ax + by = c
+    
+    N.B. if (a, b, c) is a solution then λ(a, b, c) is also a solution
+    >>> find_eq_line(*np.array([[3, 3], [2, 0]])) # working test
+    (-3, 1, -6)
+    >>> find_eq_line(*np.array([[1, 2], [3, 2]])) # a = 0
+    (0, -2, -4)
+    >>> find_eq_line(*np.array([[0, 0], [1, 3]])) # c = 0
+    (3, -1, 0)
+    >>> find_eq_line(*np.array([[2, 2], [2, -1]]))# b = 0
+    (-3, 0, -6)
+    """
     a = B[1] - A[1]
     b = A[0] - B[0]
     c = b*A[1] + a*A[0]
     return a, b, c
 
+if __name__=="__main__":
+    doctest.testmod()
+
 
 # ### Finding the intersection point of two lines
 
-# In[9]:
+# In[79]:
 
 
 def intersection_btw_lines(p1, p2, q1, q2):
+    """
+    >>> intersection_btw_lines(*np.array([[-2, 2], [3, 4], [1, 5], [1, 2]])) # [p1, p2] and ]q1, q2[ intersect
+    array([1. , 3.2])
+    >>> intersection_btw_lines(*np.array([[1, 2], [4, 2], [-2, 3], [-2, 1]])) # (p1, p2) and ]q1, q2[ intersect but not [p1, p2] and ]q1, q2[
+    array([-2.,  2.])
+    >>> intersection_btw_lines(*np.array([[2, 3], [2, 0], [2, 2], [2, 1]])) # colinear
+    array([inf, inf])
+    >>> intersection_btw_lines(*np.array([[2, 3], [2, 0], [1, 2], [1, -1]])) # parallel
+    array([inf, inf])
+    >>> intersection_btw_lines(*np.array([[3, 3], [2, 0], [0, 1], [1, -1]])) # no intersection but [p1, p2) and (q1, q2) intersect
+    array([ 1.4, -1.8])
+    >>> intersection_btw_lines(*np.array([[2, 0], [3, 2], [2, 3], [-2, 3]])) # no intersection but (p2, p1] and (q1, q2) intersect
+    array([3.5, 3. ])
+    """
     a1, b1, c1 = find_eq_line(p1, p2)
     a2, b2, c2 = find_eq_line(q1, q2)
     denom = a1*b2 - a2*b1
     xs = (c1*b2 - c2*b1) / denom if denom else np.inf
     ys = (a1*c2 - a2*c1) / denom if denom else np.inf
     return np.array([xs, ys])
+
+if __name__=="__main__":
+    doctest.testmod()
 
 
 # ### Finding the intersection point of two line segments
@@ -118,7 +174,7 @@ def intersection_btw_lines(p1, p2, q1, q2):
 # * if a solution $(t_p, t_q)$ exists and is in $[0,1]\times[0,1]$, the segments intersect (at $p_{1}+t_p(p_{2}-p_{1})$).
 # * if A is not inversible, the segments have the same slope (we need to test if segments are colinear or parallel)
 
-# In[11]:
+# In[49]:
 
 
 def intersection_btw_segs(p1, p2, q1, q2, display = False):
@@ -130,8 +186,15 @@ def intersection_btw_segs(p1, p2, q1, q2, display = False):
     
     [TODO] Manage the case where the matrix is singular
     
-    >>> intersection_btw_segs(*np.array([[10, 5], [8, 1], [3,7],[0,1]]))
+    >>> intersection_btw_segs(*np.array([[-2, 2], [3, 4], [1, 5], [1, 2]])) # [p1, p2] and ]q1, q2[ intersect
+    array([1. , 3.2])
+    >>> intersection_btw_segs(*np.array([[1, 2], [4, 2], [-2, 3], [-2, 1]])) # (p1, p2) and ]q1, q2[ intersect but not [p1, p2] and ]q1, q2[
     array([inf, inf])
+    >>> intersection_btw_segs(*np.array([[2, 3], [2, 0], [2, 2], [2, 1]])) # colinear
+    array([inf, inf])
+    >>> intersection_btw_segs(*np.array([[2, 3], [2, 0], [1, 2], [1, -1]])) # parallel
+    array([inf, inf])
+
     """
     
     a = np.array([q2-q1, p1-p2]).transpose()
@@ -154,11 +217,25 @@ if __name__=="__main__":
 
 # ### Finding the intersection between a line and a line segment
 
-# In[22]:
+# In[80]:
 
 
 def intersection_btw_line_seg(p1, p2, q1, q2):
-    """intersection between (p1, p2) and ]q1, q2["""
+    """intersection between (p1, p2) and ]q1, q2[
+    
+    >>> intersection_btw_line_seg(*np.array([[-2, 2], [3, 4], [1, 5], [1, 2]])) # [p1, p2] and ]q1, q2[ intersect
+    array([1. , 3.2])
+    >>> intersection_btw_line_seg(*np.array([[1, 2], [4, 2], [-2, 3], [-2, 1]])) # (p1, p2) and ]q1, q2[ intersect but not [p1, p2] and ]q1, q2[
+    array([-2.,  2.])
+    >>> intersection_btw_line_seg(*np.array([[2, 3], [2, 0], [2, 2], [2, 1]])) # colinear
+    -inf
+    >>> intersection_btw_line_seg(*np.array([[2, 3], [2, 0], [1, 2], [1, -1]])) # parallel
+    -inf
+    >>> intersection_btw_line_seg(*np.array([[3, 3], [2, 0], [0, 1], [1, -1]])) # no intersection but [p1, p2) and (q1, q2) intersect
+    inf
+    >>> intersection_btw_line_seg(*np.array([[2, 0], [3, 3], [2, 4], [-2, 4]])) # no intersection but (p2, p1] and (q1, q2) intersect
+    -inf
+    """
     s = intersection_btw_lines(p1, p2, q1, q2)
     # we have two find whether or not s belongs to ]q1, q2]
     ks = np.dot(q2-q1, s-q1)
@@ -169,24 +246,60 @@ def intersection_btw_line_seg(p1, p2, q1, q2):
         return np.inf
     else: # ks <= 0
         return -np.inf
+    
+if __name__=="__main__":
+    doctest.testmod()
 
 
 # ## Triangle area
 
-# In[29]:
+# In[114]:
 
 
 NTRIANGLE = 0
 def triangle_area(A, B, C, ax = None):
+    """
+    Compute the area of a triangle defined by its three vertices A, B and C
+    
+    >>> triangle_area(*np.array([[-3, -2], [-1, 1], [2, 3]]))
+    2.5
+    >>> triangle_area(*np.array([[-2, -2], [-2, 3], [-2, 2]])) # flat triangle
+    0.0
+    >>> triangle_area(*np.array([[-1, 1], [-3, -2], [2, 3]])) # other orientation
+    2.5
+    """
     global NTRIANGLE
-    NTRIANGLE += 1
-    if ax != None:
+    if ax: # Draw the triangle on ax
+        NTRIANGLE += 1
         ax.add_patch(Polygon([A, B, C], facecolor=["grey", "lightgrey"][NTRIANGLE % 2], ec = "black", alpha = 0.3))
     return 0.5 * abs((B[0]-A[0])*(C[1]-A[1]) - (C[0]-A[0])*(B[1]-A[1]))
 
+if __name__ == "__main__":
+    doctest.testmod()
+
+
+# In[115]:
+
+
 def triangle_area_oriented(A, B, C, ax = None):
+    """
+    Compute the "signed" area of a triangle defined by its three vertices A, B and C:
+        * if A, B, C are clockwise oriented, the area is positive
+        *                counterclockwise  ,             negative
+    
+    >>> triangle_area_oriented(*np.array([[-3, -2], [-1, 1], [2, 3]]))
+    2.5
+    >>> triangle_area_oriented(*np.array([[-2, -2], [-2, 3], [-2, 2]])) # flat triangle
+    0.0
+    >>> triangle_area_oriented(*np.array([[-1, 1], [-3, -2], [2, 3]])) # other orientation
+    -2.5
+    """
     area = 0.5 * abs((B[0]-A[0])*(C[1]-A[1]) - (C[0]-A[0])*(B[1]-A[1])) * orientation(A, B, C)
-    color = "yellow" if area < 0 else "lightblue"
-    if ax != None:
+    if ax: # Draw the triangle on ax
+        color = "yellow" if area < 0 else "lightblue"
         ax.add_patch(Polygon([A, B, C], facecolor=color, ec = "black", alpha = 0.4))
     return area
+
+if __name__ == "__main__":
+    doctest.testmod()
+
