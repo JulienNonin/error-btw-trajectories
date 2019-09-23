@@ -184,3 +184,9 @@ def triangle_area(A, B, C, ax = None):
         ax.add_patch(Polygon([A, B, C], facecolor=["grey", "lightgrey"][NTRIANGLE % 2], ec = "black", alpha = 0.3))
     return 0.5 * abs((B[0]-A[0])*(C[1]-A[1]) - (C[0]-A[0])*(B[1]-A[1]))
 
+def triangle_area_oriented(A, B, C, ax = None):
+    area = 0.5 * abs((B[0]-A[0])*(C[1]-A[1]) - (C[0]-A[0])*(B[1]-A[1])) * orientation(A, B, C)
+    color = "yellow" if area < 0 else "lightblue"
+    if ax != None:
+        ax.add_patch(Polygon([A, B, C], facecolor=color, ec = "black", alpha = 0.4))
+    return area
