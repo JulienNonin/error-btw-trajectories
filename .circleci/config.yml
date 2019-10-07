@@ -2,23 +2,29 @@ version: 2
 jobs:
     build:
         docker:
-        - image: circleci/python:3.7-stretch
+            - image: circleci/python:3.7-stretch
         steps:
-        - checkout
-        - run: echo "A first hello"
+            - checkout
+            - run: echo "A first hello"
 
-        - run:
-            name: install depencies
-            command: |
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install -r requirements.txt
+            - run:
+                name: install depencies
+                command: |
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install -r requirements.txt
+
+            -run:
+                name: convert ipynb into py
+                command: |
+                    . venv/bin/activate
+                    jupyter nbconvert *.ipynb --to script
             
-        - run:
-            name: run lint
-            command: |
-                . venv/bin/activate
-                pylint *.py
+            - run:
+                name: run lint
+                command: |
+                    . venv/bin/activate
+                    pylint *.py
             
             
 
