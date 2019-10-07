@@ -1,24 +1,24 @@
 version: 2
 jobs:
-	build:
+  build:
 		docker:
 			- image: circleci/python:3.7-stretch
 		steps:
 			- checkout
 			- run: echo "A first hello"
 			 
-            - run:
-                name: install depencies
-                command: |
-                    python3 -m venv venv
-                    . venv/bin/activate
-                    pip install -r requirements.txt
+      - run:
+        name: install depencies
+        command: |
+          python3 -m venv venv
+          . venv/bin/activate
+          pip install -r requirements.txt
             
-            - run:
-                name: run lint
-                command: |
-                    . venv/bin/activate
-                    make lint
+      - run:
+        name: run lint
+        command: |
+          . venv/bin/activate
+          make lint
             
             
 
