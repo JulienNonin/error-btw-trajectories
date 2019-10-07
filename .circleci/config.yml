@@ -29,11 +29,11 @@ jobs:
                     . venv/bin/activate
                     jupyter nbconvert *.ipynb --to script
             
-            - run:
-                name: run lint
-                command: |
-                    . venv/bin/activate
-                    pylint *.py
+            # - run:
+            #     name: run lint
+            #     command: |
+            #         . venv/bin/activate
+            #         pylint *.py
 
             - run:
                 name: radon
