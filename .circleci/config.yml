@@ -39,7 +39,7 @@ jobs:
                 name: radon
                 command: |
                     . venv/bin/activate
-                    radon cc . -s --total-average
+                    radon cc *.py -s --total-average
             
             
 
