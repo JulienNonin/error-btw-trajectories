@@ -11,6 +11,7 @@ jobs:
             - restore_cache:
                 key: v1-dependencies-{{ checksum "requirements.txt" }}
             - run:
+                name: install pipenv
                 command: |
                     sudo pip install pipenv
                     pipenv install
