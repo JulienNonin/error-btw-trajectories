@@ -17,8 +17,6 @@ jobs:
             - run:
                 name: install depencies
                 command: |
-                    # python3 -m venv venv
-                    # . venv/bin/activate
                     pipenv run pip install -r requirements.txt
             - save_cache:
                 key: v1-dependencies-{{ checksum "requirements.txt" }}
@@ -28,19 +26,16 @@ jobs:
             - run:
                 name: convert ipynb into py
                 command: |
-                    # . venv/bin/activate
                     pipenv run jupyter nbconvert *.ipynb --to script
             
             # - run:
             #     name: run lint
             #     command: |
-            #         . venv/bin/activate
-            #         pylint *.py
+            #         pipenv run pylint *.py
 
             - run:
                 name: radon
                 command: |
-                    # . venv/bin/activate
                     pipenv run radon cc *.py -s --total-average
             
             
