@@ -11,7 +11,7 @@ jobs:
             - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
 
             - restore_cache:
-                key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+                key: v1-dependencies-{{ checksum "requirements.txt" }}
             - run:
                 name: install pipenv
                 command: |
@@ -22,7 +22,7 @@ jobs:
                 command: |
                     pipenv run pip install -r requirements.txt
             - save_cache:
-                key: deps9-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+                key: v1-dependencies-{{ checksum "requirements.txt" }}
                 paths:
                     - ".venv"
                     - "/usr/local/bin"
