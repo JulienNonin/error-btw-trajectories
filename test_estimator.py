@@ -51,7 +51,7 @@ class TestEstimator(unittest.TestCase):
             output = error_btw_trajectories(reference, acquired)
 
             with self.subTest(test = filename, output = output, expected_output = expected_output):
-                self.assertLessEqual(abs(expected_output), epsilon)
+                self.assertLessEqual(abs(expected_output - output), epsilon)
     
     @patch('matplotlib.pyplot.figure')
     def test_samples(self, mock_show):

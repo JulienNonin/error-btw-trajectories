@@ -17,7 +17,6 @@ jobs:
                     ls -R
             - run: sudo chown -R circleci:circleci /usr/local/bin
             - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
-            - run: ls
             
             - restore_cache:
                 key: v1-dependencies-{{ checksum "requirements.txt" }}
