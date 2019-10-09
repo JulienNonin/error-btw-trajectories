@@ -40,7 +40,7 @@ jobs:
             - run:
                 name: convert ipynb into py
                 command: |
-                    pipenv run jupyter nbconvert Error-estimator.ipynb --to script --output estimator.py
+                    pipenv run jupyter nbconvert Error-estimator.ipynb --to script --output estimator
     
             
             # - run:
