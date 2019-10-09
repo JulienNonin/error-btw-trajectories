@@ -36,13 +36,13 @@ def fetch_test_data(dirname, correct = True, criterion = '.txt', sep = ',', samp
 class TestEstimator(unittest.TestCase):
     
     def test_incorrect_input(self):
-        dirname = "../indoor-location-oracles/Oracles/IncorrectInputTrajectories/"
+        dirname = "indoor-location-oracles/Oracles/IncorrectInputTrajectories/"
         for reference, acquired in fetch_test_data(dirname, correct = False):
             with self.assertRaises(AssertionError):
                 error_btw_trajectories(reference, acquired)
     
     def test_correct_input(self):
-        dirname = "../indoor-location-oracles/Oracles/CorrectInputTrajectories/"
+        dirname = "indoor-location-oracles/Oracles/CorrectInputTrajectories/"
         for filename, reference, acquired, expected_output, epsilon \
          in fetch_test_data(dirname):
             output = error_btw_trajectories(reference, acquired)
@@ -51,7 +51,7 @@ class TestEstimator(unittest.TestCase):
                 self.assertLessEqual(abs(expected_output - output), epsilon)
                 
     def test_samples(self):
-        dirname = "../indoor-location-oracles/Oracles/SampleTrajectories/"
+        dirname = "indoor-location-oracles/Oracles/SampleTrajectories/"
         for filename, reference, acquired, expected_output, epsilon \
          in fetch_test_data(dirname):
             output = error_btw_trajectories(reference, acquired)
