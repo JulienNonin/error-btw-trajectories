@@ -52,3 +52,5 @@ jobs:
                     ls
                     git submodule update --init
                     ls
+            - run: ls Oracles
+            - run: git status
