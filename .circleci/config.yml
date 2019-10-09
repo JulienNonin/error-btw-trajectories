@@ -41,6 +41,7 @@ jobs:
                 name: convert ipynb into py
                 command: |
                     pipenv run jupyter nbconvert Error-estimator.ipynb --to script --output estimator.py
+    
             
             # - run:
             #     name: run lint
@@ -51,3 +52,8 @@ jobs:
                 name: radon
                 command: |
                     pipenv run radon cc *.py -s --total-average
+
+            - run:
+                name: test Oracles
+                command: |
+                    pipenv run python -m unittest test_estimator.py
