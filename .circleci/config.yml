@@ -48,5 +48,7 @@ jobs:
             - run:
                 name: display files
                 command: |
-                    ls indoor-location-oracles
-                    ls indoor-location-oracles/Oracles
+                    cd indoor-location-oracles
+                    ls
+                    git submodule update --init
+                    ls
