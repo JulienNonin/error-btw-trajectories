@@ -7,6 +7,14 @@ jobs:
                 PIPENV_VENV_IN_PROJECT: true
         steps:
             - checkout
+            - run:
+                name: init submodule
+                command: |
+                    git submodule update --init
+                    cd indoor-location-oracles
+                    git checkout master
+                    cd ..
+                    ls -R
             - run: sudo chown -R circleci:circleci /usr/local/bin
             - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
 
@@ -31,7 +39,7 @@ jobs:
             - run:
                 name: convert ipynb into py
                 command: |
-                    pipenv run jupyter nbconvert *.ipynb --to script
+                    pipenv run jupyter nbconvert Error-estimator.ipynb --to script --output estimator
             
             # - run:
             #     name: run lint
@@ -42,6 +50,14 @@ jobs:
                 name: radon
                 command: |
                     pipenv run radon cc *.py -s --total-average
-            
-            
 
+            - run:
+                name: doctest
+                command: |
+                    pipenv run python -m doctest *.py
+            
+            - run:
+                name: test Oracles
+                command: |
+                    ls
+                    pipenv run python -m unittest test_estimator.py
