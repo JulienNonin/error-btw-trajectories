@@ -2,6 +2,7 @@ import unittest
 import numpy as np
 from os import listdir
 from estimator import *
+from unittest.mock import patch # prevent ploting figures
 
 def fetch_test_data(dirname, correct = True, criterion = '.txt', sep = ',', samples = slice(0, None)):
     """
@@ -35,13 +36,15 @@ def fetch_test_data(dirname, correct = True, criterion = '.txt', sep = ',', samp
     
 class TestEstimator(unittest.TestCase):
     
-    def test_incorrect_input(self):
+    @patch('matplotlib.pyplot.figure')
+    def test_incorrect_input(self, mock_show):
         dirname = "indoor-location-oracles/Oracles/IncorrectInputTrajectories/"
         for reference, acquired in fetch_test_data(dirname, correct = False):
             with self.assertRaises(AssertionError):
                 error_btw_trajectories(reference, acquired)
     
-    def test_correct_input(self):
+    @patch('matplotlib.pyplot.figure')
+    def test_correct_input(self, mock_show):
         dirname = "indoor-location-oracles/Oracles/CorrectInputTrajectories/"
         for filename, reference, acquired, expected_output, epsilon \
          in fetch_test_data(dirname):
@@ -49,8 +52,9 @@ class TestEstimator(unittest.TestCase):
 
             with self.subTest(test = filename, output = output, expected_output = expected_output):
                 self.assertLessEqual(abs(expected_output - output), epsilon)
-                
-    def test_samples(self):
+    
+    @patch('matplotlib.pyplot.figure')
+    def test_samples(self, mock_show):
         dirname = "indoor-location-oracles/Oracles/SampleTrajectories/"
         for filename, reference, acquired, expected_output, epsilon \
          in fetch_test_data(dirname):
@@ -58,6 +62,3 @@ class TestEstimator(unittest.TestCase):
 
             with self.subTest(test = filename, output = output, expected_output = expected_output):
                 self.assertLessEqual(abs(expected_output - output), epsilon)
-                
-if __name__ == "__main__":
-    doctest.testmod()

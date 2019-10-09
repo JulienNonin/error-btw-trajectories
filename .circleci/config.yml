@@ -54,6 +54,11 @@ jobs:
                     pipenv run radon cc *.py -s --total-average
 
             - run:
+                name: doctest
+                command: |
+                    pipenv run python -m doctest *.py
+            
+            - run:
                 name: test Oracles
                 command: |
                     ls
