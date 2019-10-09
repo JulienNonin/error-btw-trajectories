@@ -7,6 +7,14 @@ jobs:
                 PIPENV_VENV_IN_PROJECT: true
         steps:
             - checkout
+            - run:
+                name: init submodule
+                command: |
+                    git submodule update --init
+                    cd indoor-location-oracles
+                    git checkout master
+                    cd ..
+                    ls -R
             - run: sudo chown -R circleci:circleci /usr/local/bin
             - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
             - run: ls
@@ -43,18 +51,3 @@ jobs:
                 name: radon
                 command: |
                     pipenv run radon cc *.py -s --total-average
-
-
-            - run:
-                name: display files
-                command: |
-                    cd indoor-location-oracles
-                    ls
-                    git submodule update --init
-                    ls
-            - run: ls indoor-location-oracles/Oracles
-            - run: 
-                command: |
-                    cd indoor-location-oracles
-                    git status
-                    ls indoor-location-oracles/Oracles
