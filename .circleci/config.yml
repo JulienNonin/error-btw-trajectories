@@ -9,7 +9,8 @@ jobs:
             - checkout
             - run: sudo chown -R circleci:circleci /usr/local/bin
             - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
-
+            - run: ls
+            
             - restore_cache:
                 key: v1-dependencies-{{ checksum "requirements.txt" }}
             - run:
@@ -47,4 +48,5 @@ jobs:
             - run:
                 name: display files
                 command: |
-                    ls
+                    ls indoor-location-oracles
+                    ls indoor-location-oracles/Oracles
