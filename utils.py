@@ -20,7 +20,7 @@ def distance(P, Q):
     """ Computes the distance between two points P and Q
     
     >>> np.round(distance(*np.array([[-8, 9],[0, 0]])), 2)
-    12.05
+    12.04
     >>> np.round(distance(np.array([10, 20]), np.array([-4, 5])), 2)
     20.52
     >>> np.round(distance(np.array([-3, 5]), np.array([-3, 5])), 2)
