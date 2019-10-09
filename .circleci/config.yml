@@ -52,5 +52,9 @@ jobs:
                     ls
                     git submodule update --init
                     ls
-            - run: ls Oracles
-            - run: git status
+            - run: ls indoor-location-oracles/Oracles
+            - run: 
+                command: |
+                    cd indoor-location-oracles
+                    git status
+                    ls indoor-location-oracles/Oracles
