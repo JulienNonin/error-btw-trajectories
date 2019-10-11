@@ -49,7 +49,7 @@ jobs:
             - run:
                 name: radon
                 command: |
-                    pipenv run radon cc *.py -s --total-average
+                    pipenv run radon cc *.py -s --total-average -o LIGNES
 
             - run:
                 name: doctest
