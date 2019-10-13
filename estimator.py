@@ -2,12 +2,6 @@
 # To add a new markdown cell, type '#%% [markdown]'
 #%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting
 # ms-python.python added
-import os
-try:
-	os.chdir(os.path.join(os.getcwd(), '../../../../../../tmp'))
-	print(os.getcwd())
-except:
-	pass
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
@@ -169,25 +163,6 @@ class LineSegment:
                 return intersection
         return None
 
-    def single_split(self, point):
-        """point : instance of Point"""
-        if self.contains(point):
-            return LineSegment(self.anchor, point), LineSegment(point, self.endpoint)
-
-    def split(self, points):
-        """points : list of Points"""
-        sorted_points = sorted(points, key = lambda p : p.distance(self.anchor))
-        seg_last = self
-        new_segments = []
-        for point in sorted_points:
-            seg_first, seg_last = seg_last.single_split(point)
-            new_segments.append(seg_first)
-        new_segments.append(seg_last)
-        return new_segments
-
-#     def toVector(self):
-#         return Vector(self.anchor, self.endpoint)
-
 
 #%%
 class Polygon():
@@ -227,9 +202,6 @@ class Trajectory():
    
     def get_line_segments(self):
         return [self.get_line_segment(i) for i in range(len(self.points) - 1)]
-    
-    def add_points(self, new_points):
-        self.points.extend(new_points)
 
     def __repr__(self):
         return f"Trajectory({self.points})"
@@ -247,25 +219,8 @@ class Trajectory():
     def display(self, color = 'C0'):
         for segment in self.get_line_segments():
             segment.display(color)
-
-    def add_intersection_points(self, traj):
-        new_traj = Trajectory([])
-        intersections = []
-        for segment in self.get_line_segments():
-            intersection_points = []
-            for traj_segment in traj.get_line_segments():
-                intersection = segment.intersects(traj_segment)
-                if intersection: # if intersection exists
-                    intersection_points.append(intersection)
-            intersection_points = sorted(intersection_points, key = lambda p : p.distance(segment.anchor))
-            new_traj.add_points([segment.anchor])
-            new_traj.add_points(intersection_points)
-            intersections.extend(intersection_points)
-        new_traj.add_points([segment.endpoint])
-        return new_traj, intersections
     
     def find_intersection_points(self, traj):
-        intersections = []
         coord = []
         for i, segment in enumerate(self.get_line_segments()):
             intersection_points = []
@@ -283,17 +238,17 @@ class Trajectory():
                         coord_inter.append((-i, -j))
             if len(coord_inter) > 0:
                 d = dict(zip(coord_inter, intersection_points))
-                sorted_x = np.array(sorted(d.items(), key=lambda kv: kv[1].distance(Point(0,0))))
-                intersections.extend(sorted_x[:,1])
+                sorted_x = np.array(sorted(d.items(), key=lambda kv: kv[1].distance(segment.anchor)))
                 coord.extend(sorted_x[:,0])
-        return intersections, coord
+        return coord
 
     def error_with(self, acquired):
         assert len(self) >= 2 and len(acquired) >= 1, "IncorrectInputTrajectories"
         error = 0
-        Js, Is = self.find_intersection_points(acquired)
-        Jt, It = acquired.find_intersection_points(self)
+        Is = self.find_intersection_points(acquired)
+        It = acquired.find_intersection_points(self)
         I = [(self.points[0] + acquired.points[0])*0.5]
+
         si, ti = [0], [0]
         for i, (s, t) in enumerate(zip(Is, It)):
             # print(Js[i], Jt[i], Js[i] == Jt[i])
@@ -314,17 +269,13 @@ class Trajectory():
 
 
 #%%
-A = Trajectory([Point(16, 10), Point(18, 9), Point(19.3, 11), Point(20, 19), Point(22, 19), Point(23,21), Point(24, 21)])
-B = Trajectory([Point(17, 15), Point(18, 16), Point(18, 19), Point(19,15), Point(21, 15), Point(21.2, 10), Point(26, 10)])
-# B = Trajectory([Point(0.5, 3), Point(1, 0), Point(2, 0), Point(2.5, 3), Point(1.5, 3), Point(1, 2), Point(0, 2)])
+if __name__ == "__main__":
+    # A = Trajectory([Point(16, 10), Point(18, 9), Point(19.3, 11), Point(20, 19), Point(22, 19), Point(23,21), Point(24, 21)])
+    # B = Trajectory([Point(17, 15), Point(18, 16), Point(18, 19), Point(19,15), Point(21, 15), Point(21.2, 10), Point(26, 10)])
 
-A.display()
-B.display("C1")
-# print(A)
-
-
-#%%
-A.error_with(B)
+    A = Trajectory([Point(2, 2), Point(2, 6), Point(6, 6), Point(6, 2), Point(2, 2)])
+    B = Trajectory([Point(2, 2), Point(2, 3), Point(3, 5), Point(5, 8), Point(8, 3), Point(2, 1)])
+    A.error_with(B)
 
 
 #%%

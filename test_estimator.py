@@ -8,18 +8,13 @@ from unittest.mock import patch # prevent ploting figures
 def fetch_test_data(dirname, correct = True, criterion = '.txt', sep = ',', samples = slice(0, None)):
     """
     >>> fetch_test_data("./indoor-location-oracles/Oracles/CorrectInputTrajectories/")[0]
-    ['10_parallelTrajectories.txt', array([[1., 1.],
-           [3., 1.]]), array([[1., 2.],
-           [3., 2.]]), 1.0, 0.001]
+    ['10_parallelTrajectories.txt', Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]), Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
     >>> fetch_test_data("./indoor-location-oracles/Oracles/IncorrectInputTrajectories/", False)[2]
-    [array([[0., 0.],
-           [1., 0.]]), array([], dtype=float64)]
+    [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), Trajectory([])]
     >>> fetch_test_data("./indoor-location-oracles/Oracles/IncorrectInputTrajectories/", False)[1]
-    [array([[0., 1.]]), array([], dtype=float64)]
+    [Trajectory([Point(0.0, 1.0)]), Trajectory([])]
     """
-    print("AAA")
-    print(cur_dir = os.getcwd())
-    print(listdir())
+
     test_file_names = [filename for filename in listdir(dirname) if criterion in filename]
     tests_sample = []
     for filename in sorted(test_file_names)[samples]:
@@ -48,14 +43,14 @@ class TestEstimator(unittest.TestCase):
         dirname = "./indoor-location-oracles/Oracles/IncorrectInputTrajectories/"
         for reference, acquired in fetch_test_data(dirname, correct = False):
             with self.assertRaises(AssertionError):
-                error_btw_trajectories(reference, acquired)
+                reference.error_with(acquired)
     
     @patch('matplotlib.pyplot.figure')
     def test_correct_input(self, mock_show):
         dirname = "indoor-location-oracles/Oracles/CorrectInputTrajectories/"
         for filename, reference, acquired, expected_output, epsilon \
          in fetch_test_data(dirname):
-            output = error_btw_trajectories(reference, acquired)
+            output = reference.error_with(acquired)
 
             with self.subTest(test = filename, output = output, expected_output = expected_output):
                 self.assertLessEqual(abs(expected_output - output), epsilon)
@@ -65,7 +60,7 @@ class TestEstimator(unittest.TestCase):
         dirname = "indoor-location-oracles/Oracles/SampleTrajectories/"
         for filename, reference, acquired, expected_output, epsilon \
          in fetch_test_data(dirname):
-            output = error_btw_trajectories(reference, acquired)
+            output = reference.error_with(acquired)
 
             with self.subTest(test = filename, output = output, expected_output = expected_output):
                 self.assertLessEqual(abs(expected_output - output), epsilon)
