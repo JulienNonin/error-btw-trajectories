@@ -1,17 +1,20 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[ ]:
-
-
+# To add a new cell, type '#%%'
+# To add a new markdown cell, type '#%% [markdown]'
+#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting
+# ms-python.python added
+import os
+try:
+	os.chdir(os.path.join(os.getcwd(), '../../../../../../tmp'))
+	print(os.getcwd())
+except:
+	pass
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 
-# In[ ]:
-
-
+#%%
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -24,7 +27,19 @@ class Point:
         return f"⟨{self.x}, {self.y}⟩"
 
     def __eq__(self, point):
-        return self.x == point.x and self.y == point.y
+        return abs(self.x - point.x) < 1e-6 and abs(self.y - point.y) < 1e-6
+
+    def __add__(self, point):
+        return Point(self.x + point.x, self.y + point.y)
+
+    def __neg__(self):
+        return Point(-self.x, -self.y)
+
+    def __sub__(self, point):
+        return self + (-point)
+    
+    def __mul__(self, coeff):
+        return Point(self.x * coeff, self.y * coeff)
 
     def coordinates(self):
         return [self.x, self.y]
@@ -41,22 +56,11 @@ class Point:
         return np.sqrt((self.x - point.x)**2 + (self.y - point.y)**2)
 
 
-# In[ ]:
-
-
+#%%
 class Vector:
     def __init__(self, anchor, endpoint):
         self.x = endpoint.x - anchor.x
         self.y = endpoint.y - anchor.y
-
-    def __add__(self, point):
-        return Point(self.x + point.x, self.y + point.y)
-
-    def __neg__(self):
-        return Point(-self.x, -self.y)
-
-    def __sub__(self, point):
-        return self + (-point)
 
     def __repr__(self):
         return f"Vector({self.x}, {self.y})"
@@ -74,9 +78,7 @@ class Vector:
 #         return np.array([self.x, self.y])
 
 
-# In[ ]:
-
-
+#%%
 class LineSegment:
     def __init__(self, anchor, endpoint):
         self.anchor = anchor
@@ -88,9 +90,12 @@ class LineSegment:
     def __str__(self):
         return f"[{str(self.anchor)}⋯{str(self.endpoint)}]"
 
+    @property
+    def length(self):
+        return self.anchor.distance(self.endpoint)
+
     def display(self, color='teal'):
-        plt.plot([self.anchor.x, self.endpoint.x], \
-            [self.anchor.y, self.endpoint.y], 'o--', color=color)
+        plt.plot([self.anchor.x, self.endpoint.x], [self.anchor.y, self.endpoint.y], 'o--', color=color)
 
     def contains(self, point):
         """
@@ -107,7 +112,7 @@ class LineSegment:
 
     def line_equation_coeffs(self):
         """ax + by = c
-
+    
         N.B. if (a, b, c) is a solution then λ(a, b, c) is also a solution
         >>> LineSegment(Point(3, 3), Point(2, 0)).line_equation_coeffs() # working test
         (-3, 1, -6)
@@ -127,7 +132,7 @@ class LineSegment:
         """
         >>> np.round(LineSegment(Point(-1, 2), Point(2, 3)).distance(Point(1, 1)), 2) # working test
         1.58
-        >>> np.round(LineSegment(Point(0, 1), Point(0, 3)).distance(Point(-1, 0)), 2) # vertical
+        >>> np.round(LineSegment(Point(0, 1), Point(0, 3)).distance(Point(-1, 0)), 2) # vertical line
         1.0
         """
         a, b, c = self.line_equation_coeffs()
@@ -139,22 +144,16 @@ class LineSegment:
 
         Parameters :
             - p1, p2, q1, q2 : np.ndarrays of shape (2,)
-        Returns : the coordinates of the intersection points,
+        Returns : the coordinates of the intersection points,  
             if the line segments intersect
 
         [TODO] Manage the case where the matrix is singular
 
-        >>> LineSegment(Point(-2, 2), Point(3, 4)).intersects(
-            LineSegment(Point(1, 5), Point(1, 2))) # [p1, p2] and ]q1, q2[ intersect
+        >>> LineSegment(Point(-2, 2), Point(3, 4)).intersects(LineSegment(Point(1, 5), Point(1, 2))) # [p1, p2] and ]q1, q2[ intersect
         Point(1.0, 3.2)
-
-        (p1, p2) and ]q1, q2[ intersect but not [p1, p2] and ]q1, q2[
-        >>> LineSegment(Point(1, 2), Point(4, 2)).intersects(
-            LineSegment(Point(-2, 3), Point(-2, 1)))
-        >>> LineSegment(Point(2, 3), Point(2, 0)).intersects(
-            LineSegment(Point(2, 2), Point(2, 1))) # colinear
-        >>> LineSegment(Point(2, 3), Point(2, 0)).intersects(
-            LineSegment(Point(1, 2), Point(1, -1))) # parallel
+        >>> LineSegment(Point(1, 2), Point(4, 2)).intersects(LineSegment(Point(-2, 3), Point(-2, 1))) # (p1, p2) and ]q1, q2[ intersect but not [p1, p2] and ]q1, q2[
+        >>> LineSegment(Point(2, 3), Point(2, 0)).intersects(LineSegment(Point(2, 2), Point(2, 1))) # colinear
+        >>> LineSegment(Point(2, 3), Point(2, 0)).intersects(LineSegment(Point(1, 2), Point(1, -1))) # parallel
         """
         p1x, p1y = self.anchor.x, self.anchor.y
         p2x, p2y = self.endpoint.x, self.endpoint.y
@@ -190,16 +189,45 @@ class LineSegment:
 #         return Vector(self.anchor, self.endpoint)
 
 
-# In[ ]:
+#%%
+class Polygon():
+    def __init__(self, *P):
+        self.points = list(P)
+        if P[-1] != P[0]:
+            self.points.append(P[0])
+    
+    def __len__(self):
+        return len(self.points) - 1
+
+    def get_line_segment(self, i):
+        return LineSegment(self.points[i], self.points[i+1])
+
+    def get_line_segments(self):
+        return [self.get_line_segment(i) for i in range(len(self))]
+    
+    def display(self, color = 'C0'):
+        plt.fill([p.x for p in self.points], [p.y for p in self.points], facecolor=color, alpha = 0.3)
+        plt.plot([p.x for p in self.points], [p.y for p in self.points], '-o', color=color)
+
+    @property
+    def area(self):
+        area = 0
+        for segment in self.get_line_segments():
+            area += 0.5*(segment.endpoint.x - segment.anchor.x)*(segment.endpoint.y + segment.anchor.y)
+        return abs(area)
 
 
+#%%
 class Trajectory():
     def __init__(self, P : [Point]):
         self.points = P
 
+    def get_line_segment(self, i):
+        return LineSegment(self.points[i], self.points[i+1])
+   
     def get_line_segments(self):
-        return [LineSegment(self.points[i], self.points[i+1]) for i in range(len(self.points) - 1)]
-
+        return [self.get_line_segment(i) for i in range(len(self.points) - 1)]
+    
     def add_points(self, new_points):
         self.points.extend(new_points)
 
@@ -211,6 +239,10 @@ class Trajectory():
 
     def __len__(self):
         return len(self.points)
+
+    @property
+    def length(self):
+        return sum([segment.length for segment in self.get_line_segments()])
 
     def display(self, color = 'C0'):
         for segment in self.get_line_segments():
@@ -231,151 +263,70 @@ class Trajectory():
             intersections.extend(intersection_points)
         new_traj.add_points([segment.endpoint])
         return new_traj, intersections
+    
+    def find_intersection_points(self, traj):
+        intersections = []
+        coord = []
+        for i, segment in enumerate(self.get_line_segments()):
+            intersection_points = []
+            coord_inter = []
+            for j, traj_segment in enumerate(traj.get_line_segments()):
+                intersection = segment.intersects(traj_segment)
+                if intersection:
+                    intersection_points.append(intersection)
+                    coord_inter.append((i, j))
+            for j, traj_segment in enumerate(self.get_line_segments()):
+                if i == i:
+                    intersection = segment.intersects(traj_segment)
+                    if intersection:
+                        intersection_points.append(intersection)
+                        coord_inter.append((-i, -j))
+            if len(coord_inter) > 0:
+                d = dict(zip(coord_inter, intersection_points))
+                sorted_x = np.array(sorted(d.items(), key=lambda kv: kv[1].distance(Point(0,0))))
+                intersections.extend(sorted_x[:,1])
+                coord.extend(sorted_x[:,0])
+        return intersections, coord
 
     def error_with(self, acquired):
         assert len(self) >= 2 and len(acquired) >= 1, "IncorrectInputTrajectories"
-        S, I = self.add_intersection_points(acquired)
-        T, I = acquired.add_intersection_points(self)
-        pass
-
-
-# In[ ]:
-
-
-A = Trajectory([Point(0, 1), Point(1, 3), Point(2, 2), Point(3, -1), Point(4, 2), Point(3, 3)])
-B = Trajectory([Point(0, 2), Point(1, 2), Point(1.5, 3), Point(2.5, 3), Point(2, 0), Point(1, 0), Point(0.5, 3)])
-A.display()
-B.display("C1")
-print(A)
-
-
-# In[ ]:
-
-
-C, I = A.add_intersection_points(B)
-D, I = B.add_intersection_points(A)
-D.display("red")
-A.display()
-
-
-# In[ ]:
-
-
-print(I)
-
-
-# In[ ]:
-
-
-P = Point(0, 0)
-print(P)
-
-
-# In[ ]:
-
-
-a = 5
-b = 3
-print(f"a vaut {a} et b vaut {b}")
-
-
-# In[ ]:
-
-
-L = [1, 2, 3, 4, 5]
-L = [1.1, 1.2, 1.3, 2, 3, 4, 5]
-
-
-
-# In[ ]:
-
-
-a = Trajectory([])
-
-
-# In[ ]:
-
-
-[LineSegment(Point(-2, 2), Point(3, 4)), LineSegment(Point(3, 2), Point(5, 8))]
-
-
-# In[ ]:
-
-
-L = [1, 2, 3]
-L + [4, 5]
-
-
-# In[ ]:
-
-
-P = [1, 2, 3, 4, 5]
-
-
-# In[ ]:
-
-
-S = [LineSegment(P[i], P[i+1]) for i in range(len(P) - 1)]
-
-
-# In[ ]:
-
-
-print(S)
-
-
-# In[ ]:
-
-
-T = Trajectory([Point(1, 2), Point(3, 4), Point(7, 8), Point(9, 5)])
-
-
-# In[ ]:
-
-
-seg = T.get_line_segments()[0]
-
-
-# In[ ]:
-
-
-print(seg)
-
-
-# In[ ]:
-
-
-seg.split([Point(2, 3), Point(2.5, 3.5)])
-
-
-# In[ ]:
-
-
-L = ["reg", "al", "jede"]
-sorted(L)
-
-
-# In[ ]:
-
-
-sorted(L, key = lambda e : len(e))
-
-
-# In[ ]:
-
-
-a = Point(2, 3)
-if a == None:
-    print("c'est un point")
-else:
-    print('non')
-
-
-# In[ ]:
-
-
-
-
+        error = 0
+        Js, Is = self.find_intersection_points(acquired)
+        Jt, It = acquired.find_intersection_points(self)
+        I = [(self.points[0] + acquired.points[0])*0.5]
+        si, ti = [0], [0]
+        for i, (s, t) in enumerate(zip(Is, It)):
+            # print(Js[i], Jt[i], Js[i] == Jt[i])
+            if s[0] == t[1] and s[1] == t[0]:
+                # print(s, t, Js[i], Jt[i])
+                si.append(s[0]+1)
+                ti.append(s[1]+1)
+                I.append(self.get_line_segment(s[0]).intersects(acquired.get_line_segment(s[1])))
+        si.append(len(self))
+        ti.append(len(acquired))
+        I.append((self.points[-1] + acquired.points[-1])*0.5)
+
+        for i in range(len(I) - 1):
+            P = Polygon(I[i], *self.points[si[i]: si[i+1]], I[i+1], *acquired.points[ti[i]: ti[i+1]][::-1])
+            P.display(f"C{i}")
+            error += P.area
+        return error / self.length
 
 
 #%%
+A = Trajectory([Point(16, 10), Point(18, 9), Point(19.3, 11), Point(20, 19), Point(22, 19), Point(23,21), Point(24, 21)])
+B = Trajectory([Point(17, 15), Point(18, 16), Point(18, 19), Point(19,15), Point(21, 15), Point(21.2, 10), Point(26, 10)])
+# B = Trajectory([Point(0.5, 3), Point(1, 0), Point(2, 0), Point(2.5, 3), Point(1.5, 3), Point(1, 2), Point(0, 2)])
+
+A.display()
+B.display("C1")
+# print(A)
+
+
+#%%
+A.error_with(B)
+
+
+#%%
+
+
