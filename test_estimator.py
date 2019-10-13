@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 from os import listdir
-import os
 from estimator import *
 from unittest.mock import patch # prevent ploting figures
 
@@ -14,7 +13,7 @@ def fetch_test_data(dirname, correct = True, criterion = '.txt', sep = ',', samp
     >>> fetch_test_data("./indoor-location-oracles/Oracles/IncorrectInputTrajectories/", False)[1]
     [Trajectory([Point(0.0, 1.0)]), Trajectory([])]
     """
-
+    
     test_file_names = [filename for filename in listdir(dirname) if criterion in filename]
     tests_sample = []
     for filename in sorted(test_file_names)[samples]:
@@ -26,7 +25,7 @@ def fetch_test_data(dirname, correct = True, criterion = '.txt', sep = ',', samp
         acquired_coord = list(zip(data[2], data[3]))  # line 2 : x-axis of the acquired trajectory, line 3 : y-axis
         reference = Trajectory([Point(x, y) for x, y in reference_coord])
         acquired = Trajectory([Point(x, y) for x, y in acquired_coord])
-        
+
         if correct:
             expected_output, = data[4] or [-1]
             epsilon, = data[5] or [-1]
@@ -40,7 +39,7 @@ class TestEstimator(unittest.TestCase):
     
     @patch('matplotlib.pyplot.figure')
     def test_incorrect_input(self, mock_show):
-        dirname = "./indoor-location-oracles/Oracles/IncorrectInputTrajectories/"
+        dirname = "indoor-location-oracles/Oracles/IncorrectInputTrajectories/"
         for reference, acquired in fetch_test_data(dirname, correct = False):
             with self.assertRaises(AssertionError):
                 reference.error_with(acquired)

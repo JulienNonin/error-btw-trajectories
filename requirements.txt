@@ -1,0 +1,5 @@
+pylint
+jupyter
+radon
+numpy
+matplotlib
