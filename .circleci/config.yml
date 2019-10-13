@@ -39,7 +39,7 @@ jobs:
             - run:
                 name: convert ipynb into py
                 command: |
-                    pipenv run jupyter nbconvert estimator.ipynb --to script --output estimator
+                    pipenv run jupyter nbconvert estimator.ipynb --to python
             
             # - run:
             #     name: run lint
