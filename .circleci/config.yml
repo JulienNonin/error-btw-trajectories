@@ -68,3 +68,7 @@ jobs:
                 name: Packaging
                 command: |
                     pipenv run pip install .
+                    cd
+                    touch test.py
+                    printf "from trajectories_error import estimator\nprint(estimator.Point(5,4))" >> test.py
+                    pipenv run python test.py
