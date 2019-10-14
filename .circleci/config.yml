@@ -12,7 +12,6 @@ jobs:
                 command: |
                     cd tests/shared-oracles
                     git submodule update --init
-                    cd shared-oracles
                     git checkout master
                     cd ../../
                     ls -R
