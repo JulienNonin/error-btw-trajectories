@@ -67,11 +67,7 @@ jobs:
             - run:
                 name: Packaging
                 command: |
-                    # create a source distribution
-                    python setup.py sdist
-
-                    # create a wheel
-                    python setup.py bdist_wheel
+                    pip install -e .
                     cd
                     touch test.py
                     printf "from trajectories_error import estimator\nprint(estimator.Point(5,4))" >> test.py
