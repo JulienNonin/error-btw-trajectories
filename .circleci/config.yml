@@ -50,7 +50,7 @@ jobs:
             - run:
                 name: radon
                 command: |
-                    pipenv run radon cc */*.py -s --total-average
+                    pipenv run radon cc */*.py -s --total-average -o LINES
 
             - run:
                 name: doctest
@@ -63,3 +63,8 @@ jobs:
                 command: |
                     ls
                     pipenv run python -m unittest tests.test_estimator
+
+            - run:
+                name: Packaging
+                command: |
+                    pipenv run pip install .
