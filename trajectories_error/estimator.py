@@ -1,17 +1,20 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[2]:
-
-
+# To add a new cell, type '#%%'
+# To add a new markdown cell, type '#%% [markdown]'
+#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting
+# ms-python.python added
+# import os
+# try:
+# 	os.chdir(os.path.join(os.getcwd(), '../../../../../../tmp'))
+# 	print(os.getcwd())
+# except:
+# 	pass
+#%%
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 
 
-# In[3]:
-
-
+#%%
 class Point:
     def __init__(self, x, y):
         self.x = x
@@ -53,9 +56,7 @@ class Point:
         return np.sqrt((self.x - point.x)**2 + (self.y - point.y)**2)
 
 
-# In[4]:
-
-
+#%%
 class Vector:
     def __init__(self, anchor, endpoint):
         self.x = endpoint.x - anchor.x
@@ -77,9 +78,7 @@ class Vector:
 #         return np.array([self.x, self.y])
 
 
-# In[5]:
-
-
+#%%
 class LineSegment:
     def __init__(self, anchor, endpoint):
         self.anchor = anchor
@@ -165,15 +164,15 @@ class LineSegment:
         if np.linalg.det(a): # if a is invertible (if lines intersect)
             b = np.array([p1x - q1x, p1y - q1y])
             t = np.linalg.solve(a,b)
-            if np.all(0 < t) and np.all(t < 1): # segments intersect
+            if np.all(0 < t) and np.all(t <= 1): # segments intersect
                 intersection = Point(p1x + t[1] * (p2x - p1x), p1y + t[1] * (p2y - p1y))
                 return intersection
+        if self.endpoint == seg.endpoint:
+            return self.endpoint
         return None
 
 
-# In[6]:
-
-
+#%%
 class Polygon():
     def __init__(self, *P):
         self.points = list(P)
@@ -201,9 +200,7 @@ class Polygon():
         return abs(area)
 
 
-# In[43]:
-
-
+#%%
 class Trajectory():
     def __init__(self, P : [Point]):
         self.points = P
@@ -243,7 +240,7 @@ class Trajectory():
                     intersection_points.append(intersection)
                     coord_inter.append((i, j))
             for j, traj_segment in enumerate(self.get_line_segments()):
-                if i == i:
+                if i != j:
                     intersection = segment.intersects(traj_segment)
                     if intersection:
                         intersection_points.append(intersection)
@@ -285,20 +282,46 @@ class Trajectory():
         return error / self.length
 
 
-# In[44]:
+def fetch_data(filename, contains_solution=True, criterion='.txt', sep=','):
+    """
+    >>> fetch_data("tests/shared-oracles/Oracles/CorrectInputTrajectories/10_parallelTrajectories.txt")[1:]
+    [Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]), Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
+    >>> fetch_data("tests/shared-oracles/Oracles/IncorrectInputTrajectories/3_EmptyAcquiredTrajectory.txt", False)[1:]
+    [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), Trajectory([])]
+    >>> fetch_data("tests/shared-oracles/Oracles/IncorrectInputTrajectories/2_EmptyAcquiredTrajectory.txt", False)[1:]
+    [Trajectory([Point(0.0, 1.0)]), Trajectory([])]
+    """
+    with open(filename, "r") as file:
+        lines = file.read().splitlines() # getting rid of \n
+        data = [[float(n) for n in line.split(sep) if n] for line in lines] # parse data
+        
+    reference_coord = list(zip(data[0], data[1])) # line 0 : x-axis of the reference trajectory, line 1 : y-axis
+    acquired_coord = list(zip(data[2], data[3]))  # line 2 : x-axis of the acquired trajectory, line 3 : y-axis
+    reference = Trajectory([Point(x, y) for x, y in reference_coord])
+    acquired = Trajectory([Point(x, y) for x, y in acquired_coord])
+
+    if contains_solution:
+        expected_output, = data[4] or [-1]
+        epsilon, = data[5] or [-1]
+        return [filename, reference, acquired, expected_output, epsilon]
+    else:
+        return [filename, reference, acquired]
 
 
+#%%
 if __name__ == "__main__":
-    # A = Trajectory([Point(16, 10), Point(18, 9), Point(19.3, 11), Point(20, 19), Point(22, 19), Point(23,21), Point(24, 21)])
-    # B = Trajectory([Point(17, 15), Point(18, 16), Point(18, 19), Point(19,15), Point(21, 15), Point(21.2, 10), Point(26, 10)])
-
-    A = Trajectory([Point(2, 2), Point(2, 6), Point(6, 6), Point(6, 2), Point(2, 2)])
-    B = Trajectory([Point(2, 2), Point(2, 3), Point(3, 5), Point(5, 8), Point(8, 3), Point(2, 1)])
-    A.error_with(B, display=True)
-
-
-# In[ ]:
+    dirname = "tests/shared-oracles/Oracles/EvaluationTrajectories"
+    filename = "/oracle_etienne.txt"
+    filename, A, B = fetch_data(dirname + filename, contains_solution=False)
+    A, B = Trajectory(A.points), Trajectory(B.points) # inside notebook to use the Trajectory class defined in notebook instead of using the one given by the estimator.py
+    print(A.error_with(B, display=True))
+    plt.title(filename.split("/")[-1])
 
 
+#%%
+
+
+
+#%%
 
 
