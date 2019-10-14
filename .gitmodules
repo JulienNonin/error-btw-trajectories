@@ -1,0 +1,3 @@
+[submodule "tests/shared-oracles"]
+	path = tests/shared-oracles
+	url = https://github.com/rouvoy/indoor-location-oracles

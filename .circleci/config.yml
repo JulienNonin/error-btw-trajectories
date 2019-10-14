@@ -10,10 +10,11 @@ jobs:
             - run:
                 name: init submodule
                 command: |
+                    cd tests/shared-oracles
                     git submodule update --init
-                    cd indoor-location-oracles
+                    cd shared-oracles
                     git checkout master
-                    cd ..
+                    cd ../../
                     ls -R
             - run: sudo chown -R circleci:circleci /usr/local/bin
             - run: sudo chown -R circleci:circleci /usr/local/lib/python3.7/site-packages
@@ -39,6 +40,7 @@ jobs:
             - run:
                 name: convert ipynb into py
                 command: |
+                    cd trajectories_error
                     pipenv run jupyter nbconvert estimator.ipynb --to python
             
             # - run:
@@ -49,15 +51,16 @@ jobs:
             - run:
                 name: radon
                 command: |
-                    pipenv run radon cc *.py -s --total-average
+                    pipenv run radon cc */*.py -s --total-average
 
             - run:
                 name: doctest
                 command: |
-                    pipenv run python -m doctest *.py
+                    pipenv run python -m doctest trajectories_error/*.py
+                    pipenv run python -m doctest tests/*.py
             
             - run:
                 name: test Oracles
                 command: |
                     ls
-                    pipenv run python -m unittest test_estimator.py
+                    pipenv run python -m unittest tests.test_estimator
