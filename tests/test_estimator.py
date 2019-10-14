@@ -1,7 +1,6 @@
 import unittest
 import numpy as np
 import os
-from tests.utils import fetch_data
 from unittest.mock import patch # prevent ploting figures
 import trajectories_error.estimator as estimator
 
