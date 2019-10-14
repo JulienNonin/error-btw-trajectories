@@ -1,5 +1,9 @@
-perso.ipynb
+*/perso.ipynb
 __pycache__
 .ipynb_checkpoints/
 */.ipynb_checkpoints/*
 .vscode
+# Packaging
+build/
+dist/
+*.egg-info/
