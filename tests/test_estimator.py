@@ -1,20 +1,24 @@
 import unittest
 import numpy as np
-from os import listdir
-from estimator import *
+import os
+import trajectories_error
+from trajectories_error import estimator
 from unittest.mock import patch # prevent ploting figures
+
+current_dir = os.path.dirname(__file__)
 
 def fetch_test_data(dirname, correct = True, criterion = '.txt', sep = ',', samples = slice(0, None)):
     """
-    >>> fetch_test_data("./indoor-location-oracles/Oracles/CorrectInputTrajectories/")[0]
+    >>> fetch_test_data("indoor-location-oracles/Oracles/CorrectInputTrajectories/")[0]
     ['10_parallelTrajectories.txt', Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]), Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
-    >>> fetch_test_data("./indoor-location-oracles/Oracles/IncorrectInputTrajectories/", False)[2]
+    >>> fetch_test_data("indoor-location-oracles/Oracles/IncorrectInputTrajectories/", False)[2]
     [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), Trajectory([])]
-    >>> fetch_test_data("./indoor-location-oracles/Oracles/IncorrectInputTrajectories/", False)[1]
+    >>> fetch_test_data("indoor-location-oracles/Oracles/IncorrectInputTrajectories/", False)[1]
     [Trajectory([Point(0.0, 1.0)]), Trajectory([])]
     """
-    
-    test_file_names = [filename for filename in listdir(dirname) if criterion in filename]
+    global current_dir
+    dirname = filename = os.path.join(current_dir, dirname)
+    test_file_names = [filename for filename in os.listdir(dirname) if criterion in filename]
     tests_sample = []
     for filename in sorted(test_file_names)[samples]:
         with open(dirname + filename, "r") as file:
@@ -23,8 +27,8 @@ def fetch_test_data(dirname, correct = True, criterion = '.txt', sep = ',', samp
         
         reference_coord = list(zip(data[0], data[1])) # line 0 : x-axis of the reference trajectory, line 1 : y-axis
         acquired_coord = list(zip(data[2], data[3]))  # line 2 : x-axis of the acquired trajectory, line 3 : y-axis
-        reference = Trajectory([Point(x, y) for x, y in reference_coord])
-        acquired = Trajectory([Point(x, y) for x, y in acquired_coord])
+        reference = estimator.Trajectory([estimator.Point(x, y) for x, y in reference_coord])
+        acquired = estimator.Trajectory([estimator.Point(x, y) for x, y in acquired_coord])
 
         if correct:
             expected_output, = data[4] or [-1]
