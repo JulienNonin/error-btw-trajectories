@@ -63,3 +63,13 @@ class TestEstimator(unittest.TestCase):
 
             with self.subTest(test = filename, output = output, expected_output = expected_output):
                 self.assertLessEqual(abs(expected_output - output), epsilon)
+                
+    @patch('matplotlib.pyplot.figure')
+    def test_perso_samples(self, mock_show):
+        dirname = "perso-tests/"
+        for filename, reference, acquired, expected_output, epsilon \
+         in fetch_test_data(dirname):
+            output = reference.error_with(acquired)
+
+            with self.subTest(test = filename, output = output, expected_output = expected_output):
+                self.assertLessEqual(abs(expected_output - output), epsilon)
