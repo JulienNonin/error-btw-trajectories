@@ -222,20 +222,37 @@ Point(2, -1)).line_equation_coeffs()# b = 0
         >>> LineSegment(Point(2, 3), Point(2, 0))\
 .intersects(LineSegment(Point(1, 2), Point(1, -1))) # parallel
         """
-        p1x, p1y = self.anchor.x, self.anchor.y
-        p2x, p2y = self.endpoint.x, self.endpoint.y
-        q1x, q1y = seg.anchor.x, seg.anchor.y
-        q2x, q2y = seg.endpoint.x, seg.endpoint.y
+        p1x, p1y = self.anchor.coordinates()
+        p2x, p2y = self.endpoint.coordinates()
+        q1x, q1y = seg.anchor.coordinates()
+        q2x, q2y = seg.endpoint.coordinates()
         a = np.array([[q2x - q1x, p1x - p2x],
                       [q2y - q1y, p1y - p2y]])
+
         if np.linalg.det(a):  # if a is invertible (if lines intersect)
             b = np.array([p1x - q1x, p1y - q1y])
             t = np.linalg.solve(a, b)
-            if np.all(t > 0) and np.all(t <= 1):  # segments intersect
+            if np.all(t > 0) and np.all(t <= 1):  # if line segments intersect
                 intersection = Point(
                     p1x + t[1] * (p2x - p1x), p1y + t[1] * (p2y - p1y))
                 return intersection
         return None
+    
+    def intersections_with(self, traj):
+        """ Find all (unordered) intersection points between the line segment and a trajectory
+
+        Returns:
+            intersect_points (list of Points): Points that are intersection between the line segment and a line segment of the Trajectory traj
+            intersect_index (list of int): Indexes of the line segments of the Trajectory traj that intersect with the line segment self
+        """
+        intersect_points = []
+        intersect_index = []
+        for j, segment in enumerate(traj.get_line_segments()):
+            intersection = self.intersects(segment)
+            if intersection:
+                intersect_points.append(intersection)
+                intersect_index.append(j)
+        return intersect_points, intersect_index
 
 
 #%%
@@ -252,6 +269,7 @@ class Polygon():
     """
     def __init__(self, *points):
         self.points = list(points)
+        # we have to append the first point at the end if neccesary
         if points[-1] != points[0]:
             self.points.append(points[0])
 
@@ -285,11 +303,19 @@ class Polygon():
 
     @property
     def area(self):
-        """Compute the area of the simple polygon"""
+        """Compute the area of the simple polygon
+        
+        Proposed solution:
+            For each edge of the polygon, we compute the area of the right
+            trapezoid defined by this edge and its projection over the x-axis.
+            If the edge is oriented towards the positive values of x, the area
+            is counted positive ; the area is counted negative otherwise
+        """
         area = 0
-        for segment in self.get_all_edges():
-            basis = (segment.endpoint.x - segment.anchor.x)
-            heigth = 0.5 * (segment.endpoint.y + segment.anchor.y)
+
+        for edge in self.get_all_edges():
+            basis = (edge.endpoint.x - edge.anchor.x)
+            heigth = 0.5 * (edge.endpoint.y + edge.anchor.y)
             area += basis * heigth
         return abs(area)
 
@@ -334,36 +360,44 @@ class Trajectory():
         """Method to plot the trajectory"""
         for segment in self.get_line_segments():
             segment.display(color)
+    
 
-    def find_intersection_points(self, traj):
-        coord = []
+    def find_intersecting_segments(self, traj):
+        """ Returns the index of line segments of two trajectories that intersect
+        
+        Args:
+            traj (Trajectory): the second trajectory that may intersect with self
+
+        Returns:
+            intersecting_seg (list of tuples of int): the intersetion points *in order* on the trajectories. Each intersection is representred as a tuple: the index of line segments of the two trajectectories which intersect each other (or a self intersecting 
+
+        """
+        intersecting_seg = []
         for i, segment in enumerate(self.get_line_segments()):
-            intersection_points = []
-            coord_inter = []
-            for j, traj_segment in enumerate(traj.get_line_segments()):
-                intersection = segment.intersects(traj_segment)
-                if intersection:
-                    intersection_points.append(intersection)
-                    coord_inter.append((i, j))
-            for j, traj_segment in enumerate(self.get_line_segments()):
-                if i == i:
-                    intersection = segment.intersects(traj_segment)
-                    if intersection:
-                        intersection_points.append(intersection)
-                        coord_inter.append((-i, -j))
-            if len(coord_inter) > 0:
-                d = dict(zip(coord_inter, intersection_points))
-                sorted_x = np.array(
-                    sorted(d.items(), key=lambda kv: kv[1].distance(segment.anchor)))
-                coord.extend(sorted_x[:, 0])
-        return coord
+            intersections_traj, intersec_index_traj = segment.intersections_with(traj)
+            intersections_self, intersec_index_self = segment.intersections_with(self)
+
+            # Get all intersection points with segment and the index of the intersection line segments
+            intersec_points = intersections_traj + intersections_self
+            intersec_index = [(i, j) for j in intersec_index_traj] + [(-i, -j) for j in intersec_index_self]
+
+            # We have now to sort the intersection points on this segment
+            # (with relation to the distance between the intersection point and the anchoir of the line segment)
+            if len(intersec_index) > 0:
+                distances = [point.distance(segment.anchor) for point in intersec_points]
+                intersec_index_sorted = [i for _,i in sorted(zip(distances, intersec_index), key=lambda pair: pair[0])]
+                # intersections = dict(zip(intersec_index, intersec_points))
+                # intersections_sorted = np.array(
+                    # sorted(intersections.items(), key=lambda kv: kv[1].distance(segment.anchor)))
+                intersecting_seg.extend(intersec_index_sorted)
+        return intersecting_seg
 
     def error_with(self, acquired, display=False):
         assert len(self) >= 2 and len(
             acquired) >= 1, "IncorrectInputTrajectories"
         error = 0
-        Is = self.find_intersection_points(acquired)
-        It = acquired.find_intersection_points(self)
+        Is = self.find_intersecting_segments(acquired)
+        It = acquired.find_intersecting_segments(self)
 
         # Initializing the list of intersection points
         I = [(self.points[0] + acquired.points[0])*0.5]
@@ -395,14 +429,38 @@ class Trajectory():
 
 #%%
 def fetch_data(filename, contains_solution=True, sep=','):
-    """
+    """ Fetching trajectories data from a text file
+
+    Args:
+        filename (str): the name of the files which stores the data
+        contains_solution (bool): True if the file contains the expected solution
+        sep (str): separator used so store data
+
+    File Structure: A file that represents a test sample, has this following format:
+        0, 1, 2, 3, 4	# abscissa of the points of the real trajectory
+        0, 0, 1, 1, 0	# ordinate of the points of the real trajectory
+        0, 1, 2, 3	    # abscissa of the points reported by the location system
+        3, 3, 2, 2   	# ordinate of the points reported by the location system
+        # if the file stores the expected error between the trajectories:
+        9.333			# expected result
+        0.001           # epsilon: precision of the result
+
+    Returns:
+        filename (str): the filename
+        reference (Trajectory): the reference trajectory
+        acquired (Trajectory): the acquired trajectory
+    if contains_solution:
+        expected_output (float): the expected output stored in the file
+        epsilon (float): the precision of the result
+
+    Examples:
     >>> fetch_data("tests/shared-oracles/Oracles/CorrectInputTrajectories/\
 10_parallelTrajectories.txt")[1:]
-    [Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]),\
+    [Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]), \
 Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
     >>> fetch_data("tests/shared-oracles/Oracles/IncorrectInputTrajectories/\
 3_EmptyAcquiredTrajectory.txt", False)[1:]
-    [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]),\
+    [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), \
 Trajectory([])]
     >>> fetch_data("tests/shared-oracles/Oracles/IncorrectInputTrajectories/\
 2_EmptyAcquiredTrajectory.txt", False)[1:]
@@ -429,8 +487,10 @@ Trajectory([])]
 
 #%%
 if __name__ == "__main__":
-    DIRNAME = "tests/shared-oracles/Oracles/EvaluationTrajectories"
-    FILENAME = "/oracle_etienne.txt"
+    # DIRNAME = "tests/shared-oracles/Oracles/EvaluationTrajectories"
+    # FILENAME = "/oracle_etienne.txt"
+    DIRNAME = "tests/perso-tests/"
+    FILENAME = "test-eric.txt"
     NAME, A, B = fetch_data(DIRNAME + FILENAME, False)
     # inside notebook: to use the Trajectory class defined in notebook,
     # instead of using the one given by the estimator.py
