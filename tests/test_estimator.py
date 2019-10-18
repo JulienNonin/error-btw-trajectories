@@ -47,7 +47,7 @@ def fetch_test_data(dirname, contains_solution=True, criterion='.txt',
                     sep=',', samples=slice(0, None)):
     """
     >>> fetch_test_data("shared-oracles/Oracles/CorrectInputTrajectories/")[0][1:]
-    [Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]),\
+    [Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]), \
 Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
     >>> fetch_test_data("shared-oracles/Oracles/IncorrectInputTrajectories/", False)[2][1:]
     [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), Trajectory([])]
