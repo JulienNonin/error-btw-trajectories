@@ -7,6 +7,7 @@
 #%%
 import numpy as np
 import matplotlib.pyplot as plt
+from os import listdir
 
 
 #%%
@@ -328,7 +329,7 @@ class Trajectory():
         points (list of Points): ordered Points that define the trajectory
     
     Attributes:
-        points (lisst of Points): ordered Points that define the trajectory
+        points (list of Points): ordered Points that define the trajectory
     """
     def __init__(self, points):
         self.points = points
@@ -386,44 +387,44 @@ class Trajectory():
             if len(intersec_index) > 0:
                 distances = [point.distance(segment.anchor) for point in intersec_points]
                 intersec_index_sorted = [i for _,i in sorted(zip(distances, intersec_index), key=lambda pair: pair[0])]
-                # intersections = dict(zip(intersec_index, intersec_points))
-                # intersections_sorted = np.array(
-                    # sorted(intersections.items(), key=lambda kv: kv[1].distance(segment.anchor)))
                 intersecting_seg.extend(intersec_index_sorted)
         return intersecting_seg
 
-    def error_with(self, acquired, display=False):
+    def error_with(self, trajectory, display=False):
         assert len(self) >= 2 and len(
-            acquired) >= 1, "IncorrectInputTrajectories"
+            trajectory) >= 1, "IncorrectInputTrajectories"
         error = 0
-        Is = self.find_intersecting_segments(acquired)
-        It = acquired.find_intersecting_segments(self)
+        inters_self = self.find_intersecting_segments(trajectory)
+        inters_traj = trajectory.find_intersecting_segments(self)
 
         # Initializing the list of intersection points
-        I = [(self.points[0] + acquired.points[0])*0.5]
+        I = [(self.points[0] + trajectory.points[0])*0.5]
 
         # Selectioning 'real' intersection points
-        si, ti = [0], [0]  # breakpoints
-        for i, (s, t) in enumerate(zip(Is, It)):
-            # print(Js[i], Jt[i], Js[i] == Jt[i])
+        si, ti = [0], [0]  # breakpoints on self and trajectory
+        for i, (s, t) in enumerate(zip(inters_self, inters_traj)):
+            # if the i-th intersection on self is the i-th intersection on trajectory
             if s[0] == t[1] and s[1] == t[0]:
-                # print(s, t, Js[i], Jt[i])
-                si.append(s[0]+1)
-                ti.append(s[1]+1)
+                si.append(s[0]+1) # add a breakpoint
+                ti.append(s[1]+1) # add a breakpoint
+                # add an intersection point
                 I.append(self.get_line_segment(s[0]).intersects(
-                    acquired.get_line_segment(s[1])))
+                    trajectory.get_line_segment(s[1])))
+        # We had the following breakpoints and intersection point to deal with the end of the trajectories
         si.append(len(self))
-        ti.append(len(acquired))
-        I.append((self.points[-1] + acquired.points[-1])*0.5)
+        ti.append(len(trajectory))
+        I.append((self.points[-1] + trajectory.points[-1])*0.5)
 
         # Split the two trajectories in multiple polygons
         for i in range(len(I) - 1):
             s_path = self.points[si[i]: si[i+1]]
-            t_path = acquired.points[ti[i]: ti[i+1]][::-1]
+            t_path = trajectory.points[ti[i]: ti[i+1]][::-1]
+            # We compute the area of the polygon between two intersection points
             polygon = Polygon(I[i], *s_path, I[i+1], *t_path)
-            if display:
-                polygon.display(f"C{i}")
             error += polygon.area
+            if display:
+                polygon.display(f"C{i%5}")
+        
         return error / self.length
 
 
@@ -490,13 +491,14 @@ if __name__ == "__main__":
     # DIRNAME = "tests/shared-oracles/Oracles/EvaluationTrajectories"
     # FILENAME = "/oracle_etienne.txt"
     DIRNAME = "tests/perso-tests/"
-    FILENAME = "test-eric.txt"
-    NAME, A, B = fetch_data(DIRNAME + FILENAME, False)
-    # inside notebook: to use the Trajectory class defined in notebook,
-    # instead of using the one given by the estimator.py
-    A, B = Trajectory(A.points), Trajectory(B.points)
-    print(A.error_with(B, display=True))
-    plt.title(NAME.split("/")[-1])
+    for file in listdir(DIRNAME):
+        plt.figure()
+        filename, A, B = fetch_data(DIRNAME + file, False)
+        # inside notebook: to use the Trajectory class defined in notebook,
+        # instead of using the one given by the estimator.py
+        A, B = Trajectory(A.points), Trajectory(B.points)
+        print(A.error_with(B, display=True))
+        plt.title(filename.split("/")[-1])
 
 
 #%%
