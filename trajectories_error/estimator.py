@@ -320,6 +320,12 @@ class Polygon():
             area += basis * heigth
         return abs(area)
 
+#%% [markdown]
+# The last and main class defines instances of Trajectory. A trajectory is defined by all the points that constitute it. We can access a segment of the trajectory. Two compute the error between two trajectories we decided to split the two trajectories into simple polygon. The area between the two trajectories is then the accumulation of the polygons area.
+# 
+# The critical aspect is then to determine the points (later called cutting points) at which the trajectories are cut to create the polygons. Obviously, these cutting points are the intersection points of the two trajectories (cf method `find_intersecting_segments`). But the reverse is not true: some points of intersection are not really points of intersection. This occurs when both trajectories close and return to a place already explored in the past.
+# 
+# To keep only the "real" intersections, all intersections on the first trajectory (including self-intersections) are listed in order, and the same is done on the second trajectory. We compare then the intersections two by two: if an intersection is present at the same time on both trajectories, it is considered to be a real one. However, this simplistic idea does not work in some cases (When the loop is "incomplete"). This step of selecting the right intersections is performed by the method `_find_cutting_points`.
 
 #%%
 class Trajectory():
@@ -390,10 +396,7 @@ class Trajectory():
                 intersecting_seg.extend(intersec_index_sorted)
         return intersecting_seg
 
-    def error_with(self, trajectory, display=False):
-        assert len(self) >= 2 and len(
-            trajectory) >= 1, "IncorrectInputTrajectories"
-        error = 0
+    def _find_cutting_points(self, trajectory):
         inters_self = self.find_intersecting_segments(trajectory)
         inters_traj = trajectory.find_intersecting_segments(self)
 
@@ -401,24 +404,34 @@ class Trajectory():
         I = [(self.points[0] + trajectory.points[0])*0.5]
 
         # Selectioning 'real' intersection points
-        si, ti = [0], [0]  # breakpoints on self and trajectory
+        cutting_points = [[0], [0]] # cutting points on self and trajectory
         for i, (s, t) in enumerate(zip(inters_self, inters_traj)):
             # if the i-th intersection on self is the i-th intersection on trajectory
             if s[0] == t[1] and s[1] == t[0]:
-                si.append(s[0]+1) # add a breakpoint
-                ti.append(s[1]+1) # add a breakpoint
+                cutting_points[0].append(s[0]+1) # add a cutting point for self
+                cutting_points[1].append(s[1]+1) # add a cutting point for trajectory
                 # add an intersection point
-                I.append(self.get_line_segment(s[0]).intersects(
-                    trajectory.get_line_segment(s[1])))
-        # We had the following breakpoints and intersection point to deal with the end of the trajectories
-        si.append(len(self))
-        ti.append(len(trajectory))
+                intersection = self.get_line_segment(s[0]).intersects(
+                    trajectory.get_line_segment(s[1]))
+                I.append(intersection)
+        # We had the following cutting point and intersection point to deal with the end of the trajectories
+        cutting_points[0].append(len(self))
+        cutting_points[1].append(len(trajectory))
         I.append((self.points[-1] + trajectory.points[-1])*0.5)
+        return I, cutting_points
+
+
+    def error_with(self, trajectory, display=False):
+        assert len(self) >= 2 and len(
+            trajectory) >= 1, "IncorrectInputTrajectories"
+        error = 0
+
+        I, (s, t) = self._find_cutting_points(trajectory)
 
         # Split the two trajectories in multiple polygons
         for i in range(len(I) - 1):
-            s_path = self.points[si[i]: si[i+1]]
-            t_path = trajectory.points[ti[i]: ti[i+1]][::-1]
+            s_path = self.points[s[i]: s[i+1]]
+            t_path = trajectory.points[t[i]: t[i+1]][::-1]
             # We compute the area of the polygon between two intersection points
             polygon = Polygon(I[i], *s_path, I[i+1], *t_path)
             error += polygon.area
@@ -480,8 +493,8 @@ Trajectory([])]
     acquired = Trajectory([Point(x, y) for x, y in acquired_coord])
 
     if contains_solution:
-        expected_output, = data[4] or [-1]
-        epsilon, = data[5] or [-1]
+        expected_output, = data[4] if len(data) > 4 else [-1]
+        epsilon, = data[5] if len(data) >5 else [-1]
         return [filename, reference, acquired, expected_output, epsilon]
     return [filename, reference, acquired]
 
