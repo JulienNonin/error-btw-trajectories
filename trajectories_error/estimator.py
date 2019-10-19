@@ -161,7 +161,7 @@ class LineSegment:
         self.endpoint = endpoint
 
     def __repr__(self):
-        return f"Ray({repr(self.anchor)}, {repr(self.endpoint)})"
+        return f"LineSegment({repr(self.anchor)}, {repr(self.endpoint)})"
 
     def __str__(self):
         return f"[{str(self.anchor)}⋯{str(self.endpoint)}]"
@@ -525,7 +525,7 @@ class Trajectory():
 
 
 #%%
-def fetch_data(filename, contains_solution=True, sep=','):
+def fetch_data(filename, sep=','):
     """ Fetching trajectories data from a text file
 
     Args:
@@ -546,9 +546,9 @@ def fetch_data(filename, contains_solution=True, sep=','):
         filename (str): the filename
         reference (Trajectory): the reference trajectory
         acquired (Trajectory): the acquired trajectory
-    if contains_solution:
-        expected_output (float): the expected output stored in the file
-        epsilon (float): the precision of the result
+        expected_output (float): the expected output stored in the file,
+            or -1 if the expected output is not found in the file
+        epsilon (float): the precision of the result, otherwise -1
 
     Examples:
     >>> fetch_data("tests/shared-oracles/Oracles/CorrectInputTrajectories/\
@@ -575,11 +575,9 @@ Trajectory([])]
     reference = Trajectory([Point(x, y) for x, y in reference_coord])
     acquired = Trajectory([Point(x, y) for x, y in acquired_coord])
 
-    if contains_solution:
-        expected_output, = data[4] if len(data) > 4 else [-1]
-        epsilon, = data[5] if len(data) > 5 else [-1]
-        return [filename, reference, acquired, expected_output, epsilon]
-    return [filename, reference, acquired]
+    expected_output, = data[4] if len(data) > 4 else [-1]
+    epsilon, = data[5] if len(data) > 5 else [-1]
+    return reference, acquired, expected_output, epsilon
 
 
 #%%
@@ -589,12 +587,12 @@ if __name__ == "__main__":
     DIRNAME = "tests/perso-tests/"
     for file in listdir(DIRNAME):
         plt.figure()
-        filename, A, B = fetch_data(DIRNAME + file, False)
+        A, B, res, eps = fetch_data(DIRNAME + file)
         # inside notebook: to use the Trajectory class defined in notebook,
         # instead of using the one given by the estimator.py
         A, B = Trajectory(A.points), Trajectory(B.points)
         print(A.error_with(B, display=True))
-        plt.title(filename.split("/")[-1])
+        plt.title(file.split("/")[-1])
 
 
 #%%
