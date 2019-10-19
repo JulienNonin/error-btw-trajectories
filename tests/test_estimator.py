@@ -1,5 +1,5 @@
 """
-Module Docstring
+Testing file
 """
 
 import unittest
@@ -30,7 +30,7 @@ Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
 
 
 class TestEstimator(unittest.TestCase):
-    """[TODO] : Docstring"""
+    """Class for testing the estimator"""
 
     @patch('matplotlib.pyplot.figure')
     def test_incorrect_input(self, mock_show):
