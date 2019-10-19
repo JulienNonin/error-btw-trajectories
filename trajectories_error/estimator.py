@@ -1,13 +1,19 @@
 #%%
 """
-[TODO] Module docstring
+Compute the distance between two trajectories: the one reported by the
+indoor location system and the ground truth one
+
+Examples:
+    reference = Trajectory([Point(0, 0), Point(1, 1), Point(2, -1)])
+    acquired = Trajectory([Point(0,0), Point(1, -1), Point(-1, 2)])
+    reference.error_with(acquired, display = True)
 """
 
 
 #%%
+from os import listdir
 import numpy as np
 import matplotlib.pyplot as plt
-from os import listdir
 
 
 #%%
@@ -21,8 +27,8 @@ class Point:
     Attributes:
         x (float): abscissa of the point
         y (float): ordinate of the point
-
     """
+
     def __init__(self, x_init, y_init):
         self.x = x_init
         self.y = y_init
@@ -99,6 +105,43 @@ class Vector:
 #     def toArray(self):
 #         return np.array([self.x, self.y])
 
+#%% [markdown]
+# We want to be able to manipulate line segments and find intersection between two 
+# line segments. We consider oriented line segment (the line segment has a beginning - the anchor, and an endpoint) and half-oriented line segment (the anchor is 
+# excluded and the endpoint is included in the segment line).
+# 
+# ### Finding the intersection point of two line segments
+# Let $p_1$ and $p_2$ be the (2D) endpoints of one segment and let $q_1$ and $q_2$ be 
+# the endpoints of the other. A parametrization of these lines are defined as:
+# $$
+# \left\{\begin{array}{l}{p_{1}+t_p\left(p_{2}-p_{1}\right)} \\ {p_{3}+t_q\left(p_{4}-p_{3}\right)}\end{array}\right.
+# $$
+# where $t_p, t_q \in [0,1]$. Thus, the segments intersect iff there exists $(s,t)$ 
+# such that:
+# $$p_1+t_p(p_2-p_1) = q_1+t_q(q_2-q_1)$$
+# i.e.
+# $$t_q(q_2-q_1) + t_p(p_1-p_2) = p_1 - q_1$$
+# We can define our system using matrices ($p_1$, $p_2$, $q_1$, $q_2$ being a column 
+# vector of size 2) :
+# $$
+# \underbrace{\left[
+#     \begin{array}{ll}
+#         q_2-q_1 & p_1-p_1\end{array}
+# \right]}_A \times 
+# \underbrace{\left[
+#     \begin{array}{l}
+#         t_q \\ t_p\end{array}
+# \right]}_T = 
+# \underbrace{\left[
+#     \begin{array}{ll}
+#         p_1 & q_1\end{array}
+# \right]}_B
+# $$
+# * if a solution $(t_p, t_q)$ exists and is in $[0,1]\times[0,1]$, the segments 
+# intersect (at $p_{1}+t_p(p_{2}-p_{1})$).
+# * if A is not inversible, the segments have the same slope (we need to test if 
+# segments are colinear or parallel)
+# 
 
 #%%
 class LineSegment:
@@ -112,6 +155,7 @@ class LineSegment:
         anchor (Point): first end point of the line segment (exclude)
         endpoint (Point): second end point of the line segment (include)
     """
+
     def __init__(self, anchor, endpoint):
         self.anchor = anchor
         self.endpoint = endpoint
@@ -131,7 +175,7 @@ class LineSegment:
         """Method used to plot the line segment"""
         x_values = [self.anchor.x, self.endpoint.x]
         y_values = [self.anchor.y, self.endpoint.y]
-        plt.plot(x_values, y_values, 'o--', color=color)
+        plt.plot(x_values, y_values, '-o', color=color)
 
     def contains(self, point):
         """Check whether or not the line segment contains the Point point
@@ -238,13 +282,15 @@ Point(2, -1)).line_equation_coeffs()# b = 0
                     p1x + t[1] * (p2x - p1x), p1y + t[1] * (p2y - p1y))
                 return intersection
         return None
-    
+
     def intersections_with(self, traj):
         """ Find all (unordered) intersection points between the line segment and a trajectory
 
         Returns:
-            intersect_points (list of Points): Points that are intersection between the line segment and a line segment of the Trajectory traj
-            intersect_index (list of int): Indexes of the line segments of the Trajectory traj that intersect with the line segment self
+            intersect_points (list of Points): Points that are intersection between 
+                the line segment and a line segment of the Trajectory traj
+            intersect_index (list of int): Indexes of the line segments of the 
+                Trajectory traj that intersect with the line segment self
         """
         intersect_points = []
         intersect_index = []
@@ -268,6 +314,7 @@ class Polygon():
         points (list of Points): The vertices of the polygon
             The first vertice is repeated at the end (self.points[0] == self.points[-1])
     """
+
     def __init__(self, *points):
         self.points = list(points)
         # we have to append the first point at the end if neccesary
@@ -300,12 +347,12 @@ class Polygon():
         x_values = [p.x for p in self.points]
         y_values = [p.y for p in self.points]
         plt.fill(x_values, y_values, facecolor=color, alpha=0.3)
-        plt.plot(x_values, y_values, '-o', color=color)
+        # plt.plot(x_values, y_values, '-o', color=color)
 
     @property
     def area(self):
         """Compute the area of the simple polygon
-        
+
         Proposed solution:
             For each edge of the polygon, we compute the area of the right
             trapezoid defined by this edge and its projection over the x-axis.
@@ -333,15 +380,16 @@ class Trajectory():
 
     Args:
         points (list of Points): ordered Points that define the trajectory
-    
+
     Attributes:
         points (list of Points): ordered Points that define the trajectory
     """
+
     def __init__(self, points):
         self.points = points
 
     def get_line_segment(self, i):
-        """Returns the i-th line segment of the trajectory""" 
+        """Returns the i-th line segment of the trajectory"""
         return LineSegment(self.points[i], self.points[i+1])
 
     def get_line_segments(self):
@@ -367,36 +415,55 @@ class Trajectory():
         """Method to plot the trajectory"""
         for segment in self.get_line_segments():
             segment.display(color)
-    
 
     def find_intersecting_segments(self, traj):
         """ Returns the index of line segments of two trajectories that intersect
-        
+
         Args:
             traj (Trajectory): the second trajectory that may intersect with self
 
         Returns:
-            intersecting_seg (list of tuples of int): the intersetion points *in order* on the trajectories. Each intersection is representred as a tuple: the index of line segments of the two trajectectories which intersect each other (or a self intersecting 
+            intersecting_seg (list of tuples of int): the intersetion points *in 
+            order* on the trajectories. Each intersection is representred as a 
+            tuple: the index of line segments of the two trajectectories which 
+            intersect each other. If the index are negative, it represents a 
+            self-intersecting point of the self trajectory.
 
         """
         intersecting_seg = []
         for i, segment in enumerate(self.get_line_segments()):
-            intersections_traj, intersec_index_traj = segment.intersections_with(traj)
-            intersections_self, intersec_index_self = segment.intersections_with(self)
+            intersections_traj, intersec_index_traj = segment.intersections_with(
+                traj)
+            intersections_self, intersec_index_self = segment.intersections_with(
+                self)
 
             # Get all intersection points with segment and the index of the intersection line segments
             intersec_points = intersections_traj + intersections_self
-            intersec_index = [(i, j) for j in intersec_index_traj] + [(-i, -j) for j in intersec_index_self]
+            intersec_index = [(i, j) for j in intersec_index_traj] +                 [(-i, -j) for j in intersec_index_self]
 
             # We have now to sort the intersection points on this segment
             # (with relation to the distance between the intersection point and the anchoir of the line segment)
             if len(intersec_index) > 0:
-                distances = [point.distance(segment.anchor) for point in intersec_points]
-                intersec_index_sorted = [i for _,i in sorted(zip(distances, intersec_index), key=lambda pair: pair[0])]
+                distances = [point.distance(segment.anchor)
+                             for point in intersec_points]
+                intersec_index_sorted = [i for _, i in sorted(
+                    zip(distances, intersec_index), key=lambda pair: pair[0])]
                 intersecting_seg.extend(intersec_index_sorted)
         return intersecting_seg
 
     def _find_cutting_points(self, trajectory):
+        """Find 'real' intersections between to trajectories
+
+        Args:
+            trajectory (Trajectory): the second trajectory
+
+        Returns:
+            I (list of Points): list of 'real' intersections
+            cutting_segments(list of two lists): index of segments that intersect
+             for the two trajectories:
+                cutting_points[0][i] is a list of two elements [si, ti] : si is the
+                 index of a segment of self that intersects with ti another segment
+        """
         inters_self = self.find_intersecting_segments(trajectory)
         inters_traj = trajectory.find_intersecting_segments(self)
 
@@ -404,29 +471,42 @@ class Trajectory():
         I = [(self.points[0] + trajectory.points[0])*0.5]
 
         # Selectioning 'real' intersection points
-        cutting_points = [[0], [0]] # cutting points on self and trajectory
-        for i, (s, t) in enumerate(zip(inters_self, inters_traj)):
+        cutting_segments = [[0], [0]]  # cutting points on self and trajectory
+        for s, t in zip(inters_self, inters_traj):
             # if the i-th intersection on self is the i-th intersection on trajectory
             if s[0] == t[1] and s[1] == t[0]:
-                cutting_points[0].append(s[0]+1) # add a cutting point for self
-                cutting_points[1].append(s[1]+1) # add a cutting point for trajectory
+                # add a cutting point for self
+                cutting_segments[0].append(s[0]+1)
+                # add a cutting point for trajectory
+                cutting_segments[1].append(s[1]+1)
                 # add an intersection point
                 intersection = self.get_line_segment(s[0]).intersects(
                     trajectory.get_line_segment(s[1]))
                 I.append(intersection)
         # We had the following cutting point and intersection point to deal with the end of the trajectories
-        cutting_points[0].append(len(self))
-        cutting_points[1].append(len(trajectory))
+        cutting_segments[0].append(len(self))
+        cutting_segments[1].append(len(trajectory))
         I.append((self.points[-1] + trajectory.points[-1])*0.5)
-        return I, cutting_points
+        return I, cutting_segments
 
 
     def error_with(self, trajectory, display=False):
+        """Compute the error between two trajectories
+
+        Args:
+            trajectory (Trajectory): the second trajectory
+            display (bool): mode for ploting
+
+        Returns:
+            (float): the (normalized) area between the two trajectories
+        """
         assert len(self) >= 2 and len(
             trajectory) >= 1, "IncorrectInputTrajectories"
         error = 0
 
         I, (s, t) = self._find_cutting_points(trajectory)
+        if display:
+            colors = ['gold', 'orangered', 'teal']
 
         # Split the two trajectories in multiple polygons
         for i in range(len(I) - 1):
@@ -436,8 +516,11 @@ class Trajectory():
             polygon = Polygon(I[i], *s_path, I[i+1], *t_path)
             error += polygon.area
             if display:
-                polygon.display(f"C{i%5}")
-        
+                polygon.display(colors[i % len(colors)])
+        if display:
+            self.display("darkslategrey")
+            trajectory.display("indianred")
+
         return error / self.length
 
 
@@ -494,7 +577,7 @@ Trajectory([])]
 
     if contains_solution:
         expected_output, = data[4] if len(data) > 4 else [-1]
-        epsilon, = data[5] if len(data) >5 else [-1]
+        epsilon, = data[5] if len(data) > 5 else [-1]
         return [filename, reference, acquired, expected_output, epsilon]
     return [filename, reference, acquired]
 
@@ -512,10 +595,6 @@ if __name__ == "__main__":
         A, B = Trajectory(A.points), Trajectory(B.points)
         print(A.error_with(B, display=True))
         plt.title(filename.split("/")[-1])
-
-
-#%%
-
 
 
 #%%
