@@ -34,7 +34,7 @@ class TestEstimator(unittest.TestCase):
 
     @patch('matplotlib.pyplot.figure')
     def test_incorrect_input(self, mock_show):
-        """ Docstring """
+        """ Test incorrect trajectories """
         dirname = "shared-oracles/Oracles/IncorrectInputTrajectories/"
         for _, reference, acquired, _, _ in fetch_test_data(dirname):
             with self.assertRaises(AssertionError):
@@ -42,7 +42,7 @@ class TestEstimator(unittest.TestCase):
 
     @patch('matplotlib.pyplot.figure')
     def test_correct_input(self, mock_show):
-        """ Docstring """
+        """ Test correct trajectories """
         dirname = "shared-oracles/Oracles/CorrectInputTrajectories/"
         for filename, reference, acquired, expected_output, epsilon \
                 in fetch_test_data(dirname):
@@ -53,7 +53,7 @@ class TestEstimator(unittest.TestCase):
 
     @patch('matplotlib.pyplot.figure')
     def test_samples(self, mock_show):
-        """ Docstring """
+        """ Test harder trajectories """
         dirname = "shared-oracles/Oracles/SampleTrajectories/"
         for filename, reference, acquired, expected_output, epsilon \
                 in fetch_test_data(dirname):
@@ -64,7 +64,7 @@ class TestEstimator(unittest.TestCase):
 
     @patch('matplotlib.pyplot.figure')
     def test_perso_samples(self, mock_show):
-        """ Docstring """
+        """ Test perso trajectories """
         dirname = "perso-tests/"
         for filename, reference, acquired, expected_output, epsilon \
                 in fetch_test_data(dirname):
