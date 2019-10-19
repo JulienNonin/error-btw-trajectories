@@ -11,4 +11,4 @@ How to contribute?
 -------------------
 see the naming conventions_
 
-.. _conventions : https://github.com/JulienNonin/error-btw-trajectories/docs
+.. _conventions : https://github.com/JulienNonin/error-btw-trajectories/blob/master/docs/CONTRIBUTING.md
