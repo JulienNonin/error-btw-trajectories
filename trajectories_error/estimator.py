@@ -1,4 +1,9 @@
-#%%
+#!/usr/bin/env python
+# coding: utf-8
+
+# In[1]:
+
+
 """
 Compute the distance between two trajectories: the one reported by the
 indoor location system and the ground truth one
@@ -10,13 +15,17 @@ Examples:
 """
 
 
-#%%
+# In[2]:
+
+
 from os import listdir
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-#%%
+# In[3]:
+
+
 class Point:
     """Two-dimensional point in Cartesian coordinate system
 
@@ -72,7 +81,9 @@ class Point:
         return np.sqrt((self.x - point.x)**2 + (self.y - point.y)**2)
 
 
-#%%
+# In[4]:
+
+
 class Vector:
     """two-dimensional Euclidean vector
     Args:
@@ -105,7 +116,7 @@ class Vector:
 #     def toArray(self):
 #         return np.array([self.x, self.y])
 
-#%% [markdown]
+
 # We want to be able to manipulate line segments and find intersection between two 
 # line segments. We consider oriented line segment (the line segment has a beginning - the anchor, and an endpoint) and half-oriented line segment (the anchor is 
 # excluded and the endpoint is included in the segment line).
@@ -143,7 +154,9 @@ class Vector:
 # segments are colinear or parallel)
 # 
 
-#%%
+# In[5]:
+
+
 class LineSegment:
     """real (directed) half-open line segment
 
@@ -302,7 +315,9 @@ Point(2, -1)).line_equation_coeffs()# b = 0
         return intersect_points, intersect_index
 
 
-#%%
+# In[6]:
+
+
 class Polygon():
     """Simple polygon (the boundary of the polygon does not cross itself
 
@@ -367,14 +382,16 @@ class Polygon():
             area += basis * heigth
         return abs(area)
 
-#%% [markdown]
+
 # The last and main class defines instances of Trajectory. A trajectory is defined by all the points that constitute it. We can access a segment of the trajectory. Two compute the error between two trajectories we decided to split the two trajectories into simple polygon. The area between the two trajectories is then the accumulation of the polygons area.
 # 
 # The critical aspect is then to determine the points (later called cutting points) at which the trajectories are cut to create the polygons. Obviously, these cutting points are the intersection points of the two trajectories (cf method `find_intersecting_segments`). But the reverse is not true: some points of intersection are not really points of intersection. This occurs when both trajectories close and return to a place already explored in the past.
 # 
 # To keep only the "real" intersections, all intersections on the first trajectory (including self-intersections) are listed in order, and the same is done on the second trajectory. We compare then the intersections two by two: if an intersection is present at the same time on both trajectories, it is considered to be a real one. However, this simplistic idea does not work in some cases (When the loop is "incomplete"). This step of selecting the right intersections is performed by the method `_find_cutting_points`.
 
-#%%
+# In[7]:
+
+
 class Trajectory():
     """Trajectory
 
@@ -524,7 +541,9 @@ class Trajectory():
         return error / self.length
 
 
-#%%
+# In[13]:
+
+
 def fetch_data(filename, sep=','):
     """ Fetching trajectories data from a text file
 
@@ -552,16 +571,16 @@ def fetch_data(filename, sep=','):
 
     Examples:
     >>> fetch_data("tests/shared-oracles/Oracles/CorrectInputTrajectories/\
-10_parallelTrajectories.txt")[1:]
-    [Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]), \
-Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
+10_parallelTrajectories.txt")
+    (Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]), \
+Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001)
     >>> fetch_data("tests/shared-oracles/Oracles/IncorrectInputTrajectories/\
-3_EmptyAcquiredTrajectory.txt", False)[1:]
-    [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), \
-Trajectory([])]
+3_EmptyAcquiredTrajectory.txt")
+    (Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), \
+Trajectory([]), -1, -1)
     >>> fetch_data("tests/shared-oracles/Oracles/IncorrectInputTrajectories/\
-2_EmptyAcquiredTrajectory.txt", False)[1:]
-    [Trajectory([Point(0.0, 1.0)]), Trajectory([])]
+2_EmptyAcquiredTrajectory.txt")
+    (Trajectory([Point(0.0, 1.0)]), Trajectory([]), -1, -1)
     """
     with open(filename, "r") as file:
         lines = file.read().splitlines()  # getting rid of \n
@@ -575,12 +594,14 @@ Trajectory([])]
     reference = Trajectory([Point(x, y) for x, y in reference_coord])
     acquired = Trajectory([Point(x, y) for x, y in acquired_coord])
 
-    expected_output, = data[4] if len(data) > 4 else [-1]
-    epsilon, = data[5] if len(data) > 5 else [-1]
+    expected_output, = data[4] if (len(data) > 4 and data[4] != []) else [-1]
+    epsilon, = data[5] if (len(data) > 5 and data[5] != []) else [-1]
     return reference, acquired, expected_output, epsilon
 
 
-#%%
+# In[15]:
+
+
 if __name__ == "__main__":
     # DIRNAME = "tests/shared-oracles/Oracles/EvaluationTrajectories"
     # FILENAME = "/oracle_etienne.txt"
@@ -591,10 +612,12 @@ if __name__ == "__main__":
         # inside notebook: to use the Trajectory class defined in notebook,
         # instead of using the one given by the estimator.py
         A, B = Trajectory(A.points), Trajectory(B.points)
-        print(A.error_with(B, display=True))
+        print(A.error_with(B, display=True), '\t', res)
         plt.title(file.split("/")[-1])
 
 
-#%%
+# In[ ]:
+
+
 
 

@@ -7,16 +7,16 @@ import os
 from unittest.mock import patch  # prevent ploting figures
 import trajectories_error.estimator as estimator
 
-def fetch_test_data(dirname, contains_solution=True, criterion='.txt',
+def fetch_test_data(dirname, criterion='.txt',
                     sep=',', samples=slice(0, None)):
     """
     >>> fetch_test_data("shared-oracles/Oracles/CorrectInputTrajectories/")[0][1:]
     [Trajectory([Point(1.0, 1.0), Point(3.0, 1.0)]), \
 Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
-    >>> fetch_test_data("shared-oracles/Oracles/IncorrectInputTrajectories/", False)[2][1:]
-    [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), Trajectory([])]
-    >>> fetch_test_data("shared-oracles/Oracles/IncorrectInputTrajectories/", False)[1][1:]
-    [Trajectory([Point(0.0, 1.0)]), Trajectory([])]
+    >>> fetch_test_data("shared-oracles/Oracles/IncorrectInputTrajectories/")[2][1:]
+    [Trajectory([Point(0.0, 0.0), Point(1.0, 0.0)]), Trajectory([]), -1, -1]
+    >>> fetch_test_data("shared-oracles/Oracles/IncorrectInputTrajectories/")[1][1:]
+    [Trajectory([Point(0.0, 1.0)]), Trajectory([]), -1, -1]
     """
     current_dir = os.path.dirname(__file__)
     dirname = filename = os.path.join(current_dir, dirname)
@@ -24,8 +24,8 @@ Trajectory([Point(1.0, 2.0), Point(3.0, 2.0)]), 1.0, 0.001]
         dirname) if criterion in filename]
     tests_sample = []
     for filename in sorted(test_file_names)[samples]:
-        tests_sample.append(estimator.fetch_data(
-            dirname + filename, contains_solution=contains_solution, sep=sep))
+        tests_sample.append([filename] + list(estimator.fetch_data(
+            dirname + filename, sep=sep)))
     return tests_sample
 
 
@@ -36,7 +36,7 @@ class TestEstimator(unittest.TestCase):
     def test_incorrect_input(self, mock_show):
         """ Docstring """
         dirname = "shared-oracles/Oracles/IncorrectInputTrajectories/"
-        for _, reference, acquired in fetch_test_data(dirname, contains_solution=False):
+        for _, reference, acquired, _, _ in fetch_test_data(dirname):
             with self.assertRaises(AssertionError):
                 reference.error_with(acquired)
 
